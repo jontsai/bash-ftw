@@ -15,7 +15,8 @@ An opinionated collection of **BASH** scripts, aliases, customizations, defaults
 *IT upgrades laptops for your whole department and you lose your precious customizations.*  
 *Ubuntu here, Mac (FreeBSD) there, RedHat over there, Debian over yonder, Amazon Linux over there, ...*
 
-*Years of muscle memory... What?! Do. You. Mean. `-bash: ll: command not found`?*
+*Years of muscle memory... What?! Do. You. Mean. `-bash: ll: command not found`?*  
+*Handicapped, crippled*
 
 `ssh me@somehost`  
 `me@somehost's password:`
