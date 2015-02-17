@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# ssh-agent-init
+# author: Jonathan Tsai <hello@jontsai.com>
+#
+# This SSH agent startup script should work on Linux, Unix, Mac (FreeBSD)
+#
+
+KERNEL=`uname -s`
+if [ $KERNEL != 'Darwin' ] && [ -nz `which keychain` ]
+then
+    USES_KEYCHAIN=1
+fi
+
+function ssh-agent-init-keychain {
+    SSH_AGENT_FILENAME="$HOME/.keychain/`hostname`-sh"
+    if [ -f $SSH_AGENT_FILENAME ]
+    then
+        # the SSH agent file was created by keychain
+        source $SSH_AGENT_FILENAME > /dev/null
+    fi
+}
+
+function ssh-agent-init-no-keychain {
+    SSH_AGENT_FILENAME="$HOME/.ssh-vars.$HOSTNAME.sh"
+    touch $SSH_AGENT_FILENAME
+    ssh-agent -s > $SSH_AGENT_FILENAME
+    chmod a+x $SSH_AGENT_FILENAME
+    perl -i -n -e 'print $_ unless /^echo/' $SSH_AGENT_FILENAME
+    source $SSH_AGENT_FILENAME > /dev/null
+}
+
+if [[ $USES_KEYCHAIN ]]
+then
+    echo "Uses keychain"
+#    ssh-agent-init-keychain
+else
+    echo "does not use keychain"
+#    ssh-agent-init-no-keychain
+fi

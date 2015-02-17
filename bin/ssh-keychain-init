@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# ssh-keychain-init
+# author: Jonathan Tsai <hello@jontsai.com>
+#
+# This SSH keychain initialization (add keys) script should work on Linux, Unix, Mac (FreeBSD)
+#
+
+KERNEL=`uname -s`
+if [ $KERNEL != 'Darwin' ] && [ -nz `which keychain` ]
+then
+    USES_KEYCHAIN=1
+fi
+
+KEYS="$HOME/.ssh/*.pub"
+TOADD=""
+for pubkey in $KEYS
+do
+    #FILENAME=$(basename ${pubkey})
+    #EXTENSION=${pubkey##*.}
+    PRIV_KEY=${pubkey%.*}
+    #echo ${EXTENSION}
+    #echo ${PRIV_KEY}
+    if [ -e ${PRIV_KEY} ]
+        then
+        echo Adding to keychain: ${PRIV_KEY}
+        if [[ $USES_KEYCHAIN ]]
+        then
+            keychain -q ${PRIV_KEY}
+        else
+            ssh-add -K ${PRIV_KEY}
+        fi
+    fi
+done
