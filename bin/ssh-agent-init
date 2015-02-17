@@ -32,9 +32,7 @@ function ssh-agent-init-no-keychain {
 
 if [[ $USES_KEYCHAIN ]]
 then
-    echo "Uses keychain"
-#    ssh-agent-init-keychain
+    ssh-agent-init-keychain
 else
-    echo "does not use keychain"
-#    ssh-agent-init-no-keychain
+    ssh-agent-init-no-keychain
 fi
