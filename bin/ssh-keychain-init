@@ -7,7 +7,7 @@
 #
 
 KERNEL=`uname -s`
-if [ $KERNEL != 'Darwin' ] && [ -nz `which keychain 2> /dev/null` ]
+if [[ $KERNEL != 'Darwin' ]] && [[ -nz `which keychain 2> /dev/null` ]]
 then
     USES_KEYCHAIN=1
 fi
@@ -22,7 +22,7 @@ do
     #echo ${EXTENSION}
     #echo ${PRIV_KEY}
     if [ -e ${PRIV_KEY} ]
-        then
+    then
         echo Adding to keychain: ${PRIV_KEY}
         if [[ $USES_KEYCHAIN ]]
         then
