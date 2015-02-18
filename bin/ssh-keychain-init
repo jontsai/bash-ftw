@@ -28,7 +28,13 @@ do
         then
             keychain -q ${PRIV_KEY}
         else
-            ssh-add -K ${PRIV_KEY}
+            if [ $KERNEL == 'Darwin' ]
+            then
+                # store passphrase in Keychain
+                ssh-add -K ${PRIV_KEY}
+            else
+                ssh-add ${PRIV_KEY}
+            fi
         fi
     fi
 done
