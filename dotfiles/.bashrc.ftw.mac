@@ -1,0 +1,106 @@
+#!/bin/bash
+#
+# .bashrc.ftw.mac
+# author: Jonathan Tsai <hello@jontsai.com>
+#
+# Companion to .bashrc.ftw
+# An opinionated .bashrc file, for Mac
+#
+
+##################################################
+# aliases
+
+# command-line utils
+alias 7z='/Applications/7za'
+alias editapache='sudo emacs /private/etc/apache2/users/`whoami`.conf'
+if [[ -z `which emacs` ]];
+then
+    alias emacs='/Applications/Emacs.app/Contents/MacOS/Emacs -nw'
+fi
+alias flushdns='dscacheutil -flushcache'
+alias hidden_files_show='defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder'
+alias hidden_files_hide='defaults write com.apple.finder AppleShowAllFiles FALSE;killall Finder'
+alias restart-firefox='killall firefox-bin;echo "Waiting for firefox-bin to die";sleep 3;echo "Restarting Firefox";firefox'
+alias restartapache='sudo apachectl graceful'
+alias restartcoreaudio='sudo killall -9 -u _coreaudiod'
+alias setlocalhostname='sudo scutil --set HostName'
+alias tailerr='tail -f /var/log/apache2/error_log'
+alias taillog='tail -f /var/log/apache2/access_log'
+alias updatedb='sudo /usr/libexec/locate.updatedb'
+
+##################################################
+# directories
+
+alias desktop='cd ~/Desktop'
+alias docs='cd ~/Documents'
+alias music='cd ~/Music'
+alias pics='cd ~/Pictures'
+alias progs='cd ~/progs'
+
+##################################################
+# Command-line launchers for Apple Applications
+
+# dev
+alias txt='open -a TextEdit'
+alias xcode='open -a Xcode'
+# media
+alias imovie='open -a iMovie'
+alias itunes='open -a iTunes'
+alias photobooth='open -a Photo\ Booth'
+# net
+alias facetime='open -a FaceTime'
+alias safari='open -a Safari'
+# util
+alias diskutil='open -a /Applications/Utilities/Disk\ Utility.app'
+alias keychain='open -a /Applications/Utilities/Keychain\ Access.app'
+alias prefs='open -a System\ Preferences'
+
+##################################################
+# Command-line launchers for other common Mac Applications
+
+# dev
+alias eclipse='open -a eclipse'
+
+# common
+alias doc='open -a Microsoft\ Word'
+alias ppt='open -a Microsoft\ PowerPoint'
+alias xls='open -a Microsoft\ Excel'
+
+# media
+alias audacity='open -a Audacity'
+alias vlc='open -a VLC'
+
+# net
+alias adium='open -a Adium'
+alias chrome='open -a Google\ Chrome'
+alias firefox='open -a Firefox'
+alias skype='open -a Skype'
+alias thunderbird='open -a Thunderbird'
+alias ymsg='open -a Yahoo!\ Messenger'
+
+# util
+alias qs='open -a Quicksilver'
+
+##################################################
+# exports
+
+if [ -d /usr/local/mysql/bin ]
+then
+    PATH=$PATH:/usr/local/mysql/bin
+    export PATH
+fi
+
+##################################################
+# Setup Amazon EC2 Command-Line Tools
+
+if [ -d $HOME/.aws ]
+then
+    export AWS_ELB_HOME=$HOME/.aws
+    export AWS_HOME=$HOME/.aws
+    #export PATH=$PATH:$EC2_HOME/bin
+    export EC2_PRIVATE_KEY=`ls $AWS_HOME/pk-*.pem`
+    export EC2_CERT=`ls $AWS_HOME/cert-*.pem`
+    export AWS_CREDENTIAL_FILE=$AWS_HOME/aws-credential-file.txt
+else
+    echo "Note: AWS not set up"
+fi

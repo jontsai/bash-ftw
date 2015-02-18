@@ -38,3 +38,40 @@ touch $HOME/.ssh/authorized_keys
 chmod 600 $HOME/.ssh/authorized_keys
 
 echo ''
+
+##################################################
+echo "Installing dotfiles (.bashrc*)..."
+
+if [ $KERNEL == 'Darwin' ] && [ -f $HOME/.bash_profile ]
+then
+    BASHRC_FILE=$HOME/.bash_profile
+elif [ -f $HOME/.bash_aliases ]
+then
+    BASHRC_FILE=$HOME/.bash_aliases
+elif [ -f $HOME/.bashrc ]
+then
+    BASHRC_FILE=$HOME/.bashrc
+else
+    BASHRC_FILE=''
+fi
+
+if [[ $BASHRC_FILE ]]
+then 
+    echo .bashrc.ftw
+    cp dotfiles/.bashrc.ftw $HOME/
+    INSTALL_BASHRC_SOURCE="[[ -s \"$HOME/.bashrc.ftw\" ]] && source $HOME/.bashrc.ftw"
+    echo "$INSTALL_BASHRC_SOURCE" >> $BASHRC_FILE
+    if [ $KERNEL == 'Darwin' ]
+    then
+        echo .bashrc.ftw.mac
+        cp dotfiles/.bashrc.ftw.mac $HOME/
+    fi
+else
+    echo 'Not installing .bashrc.ftw'
+fi
+
+echo ''
+
+##################################################
+echo 'Finished installing bash-ftw!'
+echo ''
