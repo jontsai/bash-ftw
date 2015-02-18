@@ -9,6 +9,12 @@
 KERNEL=`uname -s`
 
 ##################################################
+# BASH globals
+
+# http://en.wikipedia.org/wiki/Umask
+umask 0002
+
+##################################################
 # prompt
 #
 # \d - Current date
