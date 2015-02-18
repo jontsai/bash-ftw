@@ -59,7 +59,7 @@ alias rmpyc='for FILE in `find . -name "*.pyc"`; do rm -i $FILE; done'
 alias svns='svn status'
 
 # utils
-alias keyup='ssh-agent-init;ssh-keychain-init'
+alias keyup='. ssh-agent-init;ssh-keychain-init'
 
 ##################################################
 # directories
