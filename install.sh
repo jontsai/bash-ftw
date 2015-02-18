@@ -18,14 +18,14 @@ echo 'Creating directories...'
 for DIR in $DIRECTORIES
 do
     echo $HOME/$DIR
-    mkdir -p $HOME/$DIR
+    mkdir -v -p $HOME/$DIR
 done
 
 echo ''
 
 ##################################################
 echo "Installing scripts into $HOME/bin..."
-cp bin/* $HOME/bin
+cp -v bin/* $HOME/bin
 
 echo ''
 
@@ -57,14 +57,13 @@ fi
 
 if [[ $BASHRC_FILE ]]
 then 
-    echo .bashrc.ftw
-    cp dotfiles/.bashrc.ftw $HOME/
+    cp -v dotfiles/.bashrc.ftw $HOME/
     INSTALL_BASHRC_SOURCE="[[ -s \"$HOME/.bashrc.ftw\" ]] && source $HOME/.bashrc.ftw"
     echo "$INSTALL_BASHRC_SOURCE" >> $BASHRC_FILE
     if [ $KERNEL == 'Darwin' ]
     then
         echo .bashrc.ftw.mac
-        cp dotfiles/.bashrc.ftw.mac $HOME/
+        cp -v dotfiles/.bashrc.ftw.mac $HOME/
     fi
 else
     echo 'Not installing .bashrc.ftw'
