@@ -23,9 +23,9 @@ function ssh-agent-init-keychain {
 
 function ssh-agent-init-no-keychain {
     SSH_AGENT_FILENAME="$HOME/.ssh-vars.$HOSTNAME.sh"
-    if [ ! -f $SSH_AGENT_FILENAME ]
+    if [[ ! -f $SSH_AGENT_FILENAME ]] || [[ -z `ps -A | grep $SSH_AGENT_PID` ]]
     then
-        # create the SSH agent file
+        # create the SSH agent file if it doensn't exist or SSH agent is not running
         touch $SSH_AGENT_FILENAME
         ssh-agent -s > $SSH_AGENT_FILENAME
         chmod a+x $SSH_AGENT_FILENAME
