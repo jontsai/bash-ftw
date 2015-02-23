@@ -60,6 +60,7 @@ alias svns='svn status'
 
 # utils
 alias keyup='. ssh-agent-init;ssh-keychain-init'
+. ssh-agent-init
 
 ##################################################
 # directories
