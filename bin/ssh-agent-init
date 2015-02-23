@@ -23,10 +23,14 @@ function ssh-agent-init-keychain {
 
 function ssh-agent-init-no-keychain {
     SSH_AGENT_FILENAME="$HOME/.ssh-vars.$HOSTNAME.sh"
-    touch $SSH_AGENT_FILENAME
-    ssh-agent -s > $SSH_AGENT_FILENAME
-    chmod a+x $SSH_AGENT_FILENAME
-    perl -i -n -e 'print $_ unless /^echo/' $SSH_AGENT_FILENAME
+    if [ ! -f $SSH_AGENT_FILENAME ]
+    then
+        # create the SSH agent file
+        touch $SSH_AGENT_FILENAME
+        ssh-agent -s > $SSH_AGENT_FILENAME
+        chmod a+x $SSH_AGENT_FILENAME
+        perl -i -n -e 'print $_ unless /^echo/' $SSH_AGENT_FILENAME
+    fi
     source $SSH_AGENT_FILENAME > /dev/null
 }
 
