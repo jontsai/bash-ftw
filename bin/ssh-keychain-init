@@ -7,7 +7,7 @@
 #
 
 KERNEL=`uname -s`
-if [[ $KERNEL != 'Darwin' ]] && [[ -nz `which keychain 2> /dev/null` ]]
+if [[ $KERNEL != 'Darwin' ]] && [[ -n `which keychain 2> /dev/null` ]]
 then
     USES_KEYCHAIN=1
 fi
