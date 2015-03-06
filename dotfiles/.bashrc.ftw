@@ -6,6 +6,10 @@
 # An opinionated .bashrc file
 #
 
+# don't execute if not an interactive BASH shell
+# `$-` shows `i` if an interactive shell
+[[ ${-#*i} != ${-} ]] || return
+
 KERNEL=`uname -s`
 
 ##################################################
