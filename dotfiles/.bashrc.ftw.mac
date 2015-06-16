@@ -22,6 +22,7 @@ alias hidden_files_show='defaults write com.apple.finder AppleShowAllFiles TRUE;
 alias hidden_files_hide='defaults write com.apple.finder AppleShowAllFiles FALSE;killall Finder'
 alias restart-firefox='killall firefox-bin;echo "Waiting for firefox-bin to die";sleep 3;echo "Restarting Firefox";firefox'
 alias restartapache='sudo apachectl graceful'
+alias restartcardreader='sudo kextunload -b com.apple.driver.AppleUSBCardReader; sudo kextload -b com.apple.driver.AppleUSBCardReader'
 alias restartcoreaudio='sudo killall -9 -u _coreaudiod'
 alias setlocalhostname='sudo scutil --set HostName'
 alias tailerr='tail -f /var/log/apache2/error_log'
