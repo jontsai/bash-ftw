@@ -46,7 +46,6 @@ export EDITOR=emacs
 # aliases
 
 # basic commands
-alias ls='ls -G'
 alias la='ls -a'
 alias ll='ls -l'
 alias pu='pushd'
