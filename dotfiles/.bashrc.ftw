@@ -57,6 +57,7 @@ alias grep='grep --color'
 # dev
 alias edithosts='sudo emacs /etc/hosts'
 alias gitup='export GIT_TMP_BRANCH=`git rev-parse --abbrev-ref HEAD | tr -d "\n"`; git checkout master; git fetch origin; git rebase origin/master; git checkout ${GIT_TMP_BRANCH}'
+alias gitdeletemerged="git branch --merged master | grep -v 'master$' | xargs git branch -d"
 alias rmemacsbackups='for FILE in `find . -name "*~"`; do rm -i $FILE; done'
 alias rmpyc='for FILE in `find . -name "*.pyc"`; do rm -i $FILE; done'
 alias svns='svn status'
