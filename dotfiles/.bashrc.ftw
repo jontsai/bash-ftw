@@ -84,6 +84,9 @@ alias www='cd ~/www'
 # User .bashrc
 [[ -s "$HOME/.bashrc.$USER" ]] && source "$HOME/.bashrc.$USER"
 
+# Bash completion support for Git. Based on https://github.com/git/git/blob/master/contrib/completion/git-completion.bash
+[[ -s "$HOME/.git-completion.bash" ]] && source "$HOME/.git-completion.bash"
+
 # Load various .bashrc.* customizations
 # Define BASHRC_GROUPS as an export in the .bashrc.$USER file
 for group in ${BASHRC_GROUPS}

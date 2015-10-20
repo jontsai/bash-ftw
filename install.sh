@@ -58,6 +58,7 @@ fi
 if [[ $BASHRC_FILE ]]
 then 
     cp -v dotfiles/.bashrc.ftw $HOME/
+    cp -v dotfiles/.git-completion.bash $HOME/
     INSTALL_BASHRC_SOURCE="[[ -s \"$HOME/.bashrc.ftw\" ]] && source $HOME/.bashrc.ftw"
     echo "$INSTALL_BASHRC_SOURCE" >> $BASHRC_FILE
     if [ $KERNEL == 'Darwin' ]
