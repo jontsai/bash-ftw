@@ -19,7 +19,19 @@ KERNEL=`uname -s`
 umask 0002
 
 ##################################################
-# prompt
+# BASH functions
+
+function parse_git_branch {
+    if [ -d .git ]
+    then
+        git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+    else
+        echo ''
+    fi
+}
+
+##################################################
+# Prompt
 #
 # \d - Current date
 # \t - Current time
@@ -30,7 +42,7 @@ umask 0002
 # \w - Current working directory, full path (ie: /Users/Admin/Desktop)
 # Default Mac Style: PS1="\h:\W \u$"
 # Ubuntu Style: export PS1="\u@\h:\w$ "
-export PS1="\t \u@\h:\w$ "
+export PS1="[\t] \u@\h:\w\$(parse_git_branch)$ "
 
 ##################################################
 # exports
@@ -56,11 +68,16 @@ alias grep='grep --color'
 
 # dev
 alias edithosts='sudo emacs /etc/hosts'
-alias gitup='export GIT_TMP_BRANCH=`git rev-parse --abbrev-ref HEAD | tr -d "\n"`; git checkout master; git fetch origin; git rebase origin/master; git checkout ${GIT_TMP_BRANCH}'
-alias gitdeletemerged="git branch --merged master | grep -v 'master$' | xargs git branch -d"
 alias rmemacsbackups='for FILE in `find . -name "*~"`; do rm -i $FILE; done'
 alias rmpyc='for FILE in `find . -name "*.pyc"`; do rm -i $FILE; done'
 alias svns='svn status'
+
+# Git
+alias gb='git branch'
+alias gcd='git checkout develop'
+alias gcm='git checkout master'
+alias gitup='export GIT_TMP_BRANCH=`git rev-parse --abbrev-ref HEAD | tr -d "\n"`; git checkout master; git fetch origin; git rebase origin/master; git checkout ${GIT_TMP_BRANCH}'
+alias gitdeletemerged="git branch --merged master | grep -v 'master$' | xargs git branch -d"
 
 # utils
 alias keyup='. ssh-agent-init;ssh-keychain-init'
