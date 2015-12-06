@@ -92,6 +92,12 @@ alias dload='cd ~/dload'
 alias temp='cd ~/tmp'
 alias www='cd ~/www'
 
+##
+# Node.js
+function n {
+   $(npm bin)/$@  
+}
+
 ##################################################
 # source other .bashrc files
 
