@@ -78,6 +78,7 @@ alias gcd='git checkout develop'
 alias gcm='git checkout master'
 alias gitup='export GIT_TMP_BRANCH=`git rev-parse --abbrev-ref HEAD | tr -d "\n"`; git checkout master; git fetch origin; git rebase origin/master; git checkout ${GIT_TMP_BRANCH}'
 alias gitdeletemerged="git branch --merged master | grep -v 'master$' | xargs git branch -d"
+alias gdsf='git dsf'
 
 # utils
 alias keyup='. ssh-agent-init;ssh-keychain-init'
