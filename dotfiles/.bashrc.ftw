@@ -22,7 +22,8 @@ umask 0002
 # BASH functions
 
 function parse_git_branch {
-    if [ -d .git ]
+    TEST_GIT_REPO=`git rev-parse 2> /dev/null > /dev/null`
+    if [[ $? ]]
     then
         git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
     else
