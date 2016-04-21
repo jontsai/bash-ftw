@@ -76,6 +76,7 @@ alias svns='svn status'
 # Git
 alias gb='git branch'
 alias gca='git commit -a'
+alias gcb='git create-branch'
 alias gcd='git checkout develop'
 alias gcm='git checkout master'
 alias gitup='export GIT_TMP_BRANCH=`git rev-parse --abbrev-ref HEAD | tr -d "\n"`; git checkout master; git fetch origin; git rebase origin/master; git checkout ${GIT_TMP_BRANCH}'
