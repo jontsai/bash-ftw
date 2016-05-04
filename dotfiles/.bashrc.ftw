@@ -48,8 +48,8 @@ export PS1="[\t] \u@\h:\w\$(parse_git_branch)$ "
 ##################################################
 # exports
 
-# local scripts
-PATH=$PATH:$HOME/bin
+# local scripts and /usr/local/sbin
+PATH=$PATH:$HOME/bin:/usr/local/sbin
 export PATH
 
 export SVN_EDITOR=emacs
