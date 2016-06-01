@@ -20,7 +20,7 @@ if [[ -z `which emacs` ]];
 then
     alias emacs='/Applications/Emacs.app/Contents/MacOS/Emacs -nw'
 fi
-alias flushdns='dscacheutil -flushcache'
+alias flushdns='sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder'
 alias hidden_files_show='defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder'
 alias hidden_files_hide='defaults write com.apple.finder AppleShowAllFiles FALSE;killall Finder'
 alias restart-firefox='killall firefox-bin;echo "Waiting for firefox-bin to die";sleep 3;echo "Restarting Firefox";firefox'
