@@ -87,6 +87,16 @@ alias ymsg='open -a Yahoo!\ Messenger'
 alias qs='open -a Quicksilver'
 
 ##################################################
+# LaunchCtl
+
+function restart-launchctl-process {
+    process=$1
+    launchctl stop $process
+    sleep 3
+    launchctl start $process
+}
+
+##################################################
 # exports
 
 if [ -d /usr/local/mysql/bin ]
