@@ -45,6 +45,11 @@ alias progs='cd ~/progs'
 ##################################################
 # Command-line launchers for Apple Applications
 
+# lock screen - set "Require password [immediately] after sleep or screen saver begins"
+#/System/Library/CoreServices/"Menu Extras"/User.menu/Contents/Resources/CGSession -suspend
+SCREENSAVER='/System/Library/Frameworks/ScreenSaver.framework/Versions/A/Resources/ScreenSaverEngine.app'
+alias lll='open -a $SCREENSAVER'
+
 # dev
 alias txt='open -a TextEdit'
 alias xcode='open -a Xcode'
