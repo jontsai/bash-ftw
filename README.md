@@ -30,7 +30,7 @@ An opinionated collection of **BASH** scripts, aliases, customizations, defaults
 
 ## What's In the Box
 
-* TBD
+* ~~TBD~~ It's good. I use it, and you should use it to. No time to write this `README` section.
 
 ## Contributing
 
