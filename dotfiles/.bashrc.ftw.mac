@@ -29,6 +29,7 @@ alias restartcardreader='sudo kextunload -b com.apple.driver.AppleUSBCardReader;
 alias restartcoreaudio='sudo killall -9 -u _coreaudiod'
 alias restartusbstorages='sudo kextunload -b com.apple.driver.AppleUSBCardReader;sudo kextunload -b com.apple.driver.AppleSDXC;sudo kextunload -b com.apple.iokit.IOUSBMassStorageClass;sudo kextload -b com.apple.driver.AppleUSBCardReader;sudo kextload -b com.apple.driver.AppleSDXC;sudo kextload -b com.apple.iokit.IOUSBMassStorageClass;'
 alias setlocalhostname='sudo scutil --set HostName'
+alias set-utc-timezone='sudo ln -sf /usr/share/zoneinfo/UTC /etc/localtime'
 alias tailerr='tail -f /var/log/apache2/error_log'
 alias taillog='tail -f /var/log/apache2/access_log'
 alias updatedb='sudo /usr/libexec/locate.updatedb'
