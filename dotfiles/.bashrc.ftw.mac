@@ -10,6 +10,18 @@
 ##################################################
 # aliases
 
+# basic commands
+# `ls` has different flags on Mac
+alias l='ls -CFG'
+alias la='ls -aFG'
+alias ll='ls -lhFG'
+alias lla='ls -lahFG'
+alias llt='ls -lhtFG'
+alias llat='ls -lahtFG'
+# `top` has different flags on Mac
+alias topcpu='top -o CPU'
+alias topmem='top -o MEM'
+
 # command-line utils
 if [[ -z `which 7z` ]];
 then

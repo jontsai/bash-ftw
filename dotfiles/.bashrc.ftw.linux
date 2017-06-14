@@ -1,0 +1,16 @@
+#!/bin/bash
+#
+# .bashrc.ftw.mac
+# author: Jonathan Tsai <hello@jontsai.com>
+#
+# Companion to .bashrc.ftw
+# An opinionated .bashrc file, for Linux
+#
+
+##################################################
+# aliases
+
+# basic commands
+# `top` has different flags on Linux
+alias topcpu='top -o %CPU'
+alias topmem='top -o %MEM'
