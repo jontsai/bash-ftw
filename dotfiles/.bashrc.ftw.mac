@@ -138,8 +138,14 @@ then
     export AWS_ELB_HOME=$HOME/.aws
     export AWS_HOME=$HOME/.aws
     #export PATH=$PATH:$EC2_HOME/bin
-    export EC2_PRIVATE_KEY=`ls $AWS_HOME/pk-*.pem`
-    export EC2_CERT=`ls $AWS_HOME/cert-*.pem`
+    if [ -f $AWS_HOME/pk-*.pem ]
+    then
+        export EC2_PRIVATE_KEY=`ls $AWS_HOME/pk-*.pem`
+    fi
+    if [ -f $AWS_HOME/cert-*.pem ]
+    then
+        export EC2_CERT=`ls $AWS_HOME/cert-*.pem`
+    fi
     export AWS_CREDENTIAL_FILE=$AWS_HOME/aws-credential-file.txt
 else
     echo "Note: AWS not set up"
