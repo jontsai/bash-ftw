@@ -55,6 +55,8 @@ export PATH
 export SVN_EDITOR=emacs
 export EDITOR=emacs
 
+export HISTTIMEFORMAT="%Y-%m-%d %T "
+
 ##################################################
 # aliases
 
