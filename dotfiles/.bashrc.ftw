@@ -92,7 +92,10 @@ alias gpu='git push'
 alias gst='git status'
 alias gitup='export GIT_TMP_BRANCH=`git rev-parse --abbrev-ref HEAD | tr -d "\n"`; git checkout master; git fetch origin; git rebase origin/master; git checkout ${GIT_TMP_BRANCH}'
 alias gitdeletemerged="git branch --merged master | grep -v 'master$' | xargs git branch -d"
-alias gitdeletenonmaster="for branch in `git branch | awk '{ print $1}'`; do if [ \"$branch\" != \"master\" ]; then git branch -D $branch; fi; done"
+
+function gitdeletenonmaster {
+    for branch in `git branch | awk '{ print $1}' | grep -v '^*'`; do if [[ "$branch" != "master" ]]; then git branch -D $branch; fi; done
+}
 
 # utils
 alias keyup='. ssh-agent-init;ssh-keychain-init'
