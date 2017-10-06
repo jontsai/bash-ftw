@@ -103,6 +103,7 @@ function gitdeletenonmaster {
 }
 
 # utils
+alias json='python -mjson.tool'
 alias keyup='. ssh-agent-init;ssh-keychain-init'
 . ssh-agent-init
 
