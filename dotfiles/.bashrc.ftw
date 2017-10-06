@@ -62,6 +62,9 @@ export EDITOR=emacs
 
 export HISTTIMEFORMAT="%Y-%m-%d %T "
 
+export CLICOLOR=1
+export CLICOLOR_FORCE=1
+
 ##################################################
 # aliases
 
