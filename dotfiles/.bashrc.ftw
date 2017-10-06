@@ -76,7 +76,9 @@ alias pu='pushd'
 alias po='popd'
 alias rm='rm -i'
 alias cp='cp -i'
-alias grep='grep --color'
+alias grep='grep --color=always'
+alias lessr='less -R'
+alias morer='more -R'
 
 # dev
 alias edithosts='sudo emacs /etc/hosts'
@@ -103,6 +105,7 @@ function gitdeletenonmaster {
 }
 
 # utils
+alias jq='jq -C'
 alias json='python -mjson.tool'
 alias keyup='. ssh-agent-init;ssh-keychain-init'
 . ssh-agent-init
