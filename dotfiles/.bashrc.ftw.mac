@@ -74,7 +74,6 @@ alias photobooth='open -a Photo\ Booth'
 alias facetime='open -a FaceTime'
 alias safari='open -a Safari'
 # util
-alias diskutil='open -a /Applications/Utilities/Disk\ Utility.app'
 alias keychain='open -a /Applications/Utilities/Keychain\ Access.app'
 alias prefs='open -a System\ Preferences'
 
