@@ -130,6 +130,22 @@ function n {
 }
 
 ##################################################
+# NTFS mounts
+# https://github.com/osxfuse/osxfuse/wiki/NTFS-3G
+
+function mount-ntfs-rw {
+    if [[ $# == 2 ]]
+    then
+        DEVICE=$1
+        VOLUME=$2
+        sudo mkdir $VOLUME
+        sudo ntfs-3g $DEVICE $VOLUME -olocal -oallow_other
+    else
+        echo "Usage: mount-ntfs-rw /dev/DEVICE /Volumes/VOLUME"
+    fi
+}
+
+##################################################
 # Setup Amazon EC2 Command-Line Tools
 
 if [ -d $HOME/.aws ]
