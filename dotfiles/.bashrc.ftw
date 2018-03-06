@@ -12,13 +12,13 @@
 
 KERNEL=`uname -s`
 
-##################################################
+################################################################################
 # BASH globals
 
 # http://en.wikipedia.org/wiki/Umask
 umask 0002
 
-##################################################
+################################################################################
 # BASH functions
 
 function parse_git_branch {
@@ -36,7 +36,13 @@ function grep-kill {
     ps -A | grep ${PATTERN} | grep -v grep | awk '{print $1}' | xargs kill
 }
 
-##################################################
+##
+# Node.js
+function n {
+   $(npm bin)/$@
+}
+
+################################################################################
 # Prompt
 #
 # \d - Current date
@@ -50,7 +56,7 @@ function grep-kill {
 # Ubuntu Style: export PS1="\u@\h:\w$ "
 export PS1="[\t] \u@\h:\w\$(parse_git_branch)$ "
 
-##################################################
+################################################################################
 # exports
 
 # local scripts and /usr/local/sbin
@@ -65,9 +71,10 @@ export HISTTIMEFORMAT="%Y-%m-%d %T "
 export CLICOLOR=1
 export CLICOLOR_FORCE=1
 
-##################################################
+################################################################################
 # aliases
 
+##
 # basic commands
 alias l='ls -CF'
 alias la='ls -aF'
@@ -83,12 +90,18 @@ alias grep='grep --color=always'
 alias lessr='less -R'
 alias morer='more -R'
 
+##
 # dev
 alias edithosts='sudo emacs /etc/hosts'
 alias rmemacsbackups='for FILE in `find . -name "*~"`; do rm -i $FILE; done'
-alias rmpyc='for FILE in `find . -name "*.pyc"`; do rm -i $FILE; done'
 alias svns='svn status'
 
+##
+# Python helpers
+alias rmpyc='for FILE in `find . -name "*.pyc"`; do rm -i $FILE; done'
+alias venv='source ./venv/bin/activate'
+
+##
 # Git
 alias gb='git branch'
 alias gca='git commit -a'
@@ -107,16 +120,18 @@ function gitdeletenonmaster {
     for branch in `git branch | awk '{ print $1}' | grep -v '^*'`; do if [[ "$branch" != "master" ]]; then git branch -D $branch; fi; done
 }
 
+##
 # utils
 alias jq='jq -C'
 alias json='python -mjson.tool'
 alias keyup='. ssh-agent-init;ssh-keychain-init'
 . ssh-agent-init
 
+##
 # Docker
 alias dcdu='docker-compose down --remove-orphans;docker-compose up -d'
 
-##################################################
+################################################################################
 # directories
 
 alias bin='cd ~/bin'
@@ -125,13 +140,7 @@ alias dload='cd ~/dload'
 alias temp='cd ~/tmp'
 alias www='cd ~/www'
 
-##
-# Node.js
-function n {
-   $(npm bin)/$@  
-}
-
-##################################################
+################################################################################
 # source other .bashrc files
 
 # Linux
