@@ -71,6 +71,10 @@ export HISTTIMEFORMAT="%Y-%m-%d %T "
 export CLICOLOR=1
 export CLICOLOR_FORCE=1
 
+# https://docs.python.org/2/using/cmdline.html#envvar-PYTHONDONTWRITEBYTECODE
+# Disable writing of Python bytecode (*.pyc files) -- negligible performance issue in dev
+export PYTHONDONTWRITEBYTECODE=1
+
 ################################################################################
 # aliases
 
