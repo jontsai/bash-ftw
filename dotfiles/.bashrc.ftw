@@ -80,6 +80,8 @@ export PYTHONDONTWRITEBYTECODE=1
 
 ##
 # basic commands
+alias ..='cd ..'
+alias ....='cd ../..'
 alias l='ls -CF'
 alias la='ls -aF'
 alias ll='ls -lhF'
