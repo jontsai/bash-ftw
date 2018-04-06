@@ -119,12 +119,24 @@ alias gdsf='git dsf'
 alias glog='git log'
 alias gpl='git pull'
 alias gpu='git push'
+alias gsq='git-squash'
 alias gst='git status'
 alias gitup='export GIT_TMP_BRANCH=`git rev-parse --abbrev-ref HEAD | tr -d "\n"`; git checkout master; git fetch origin; git rebase origin/master; git checkout ${GIT_TMP_BRANCH}'
 alias gitdeletemerged="git branch --merged master | grep -v 'master$' | xargs git branch -d"
 
 function gitdeletenonmaster {
     for branch in `git branch | awk '{ print $1}' | grep -v '^*'`; do if [[ "$branch" != "master" ]]; then git branch -D $branch; fi; done
+}
+
+function git-squash {
+    NUM_COMMITS=$@;
+    re='^[0-9]+$'
+    if ! [[ $NUM_COMMITS =~ $re ]]
+    then
+        echo 'Error: git-squash expects a number of commits to squash'
+    else
+        git reset --soft HEAD~${NUM_COMMITS} && git commit --edit -m"$(git log --format=%B --reverse HEAD..HEAD@{1})"
+    fi
 }
 
 ##
