@@ -35,6 +35,7 @@ fi
 alias flushdns='sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder'
 alias hidden_files_show='defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder'
 alias hidden_files_hide='defaults write com.apple.finder AppleShowAllFiles FALSE;killall Finder'
+alias kill-screensaver='killall ScreenSaverEngine'
 alias restart-firefox='killall firefox-bin;echo "Waiting for firefox-bin to die";sleep 3;echo "Restarting Firefox";firefox'
 alias restartapache='sudo apachectl graceful'
 alias restartcardreader='sudo kextunload -b com.apple.driver.AppleUSBCardReader; sudo kextload -b com.apple.driver.AppleUSBCardReader'
