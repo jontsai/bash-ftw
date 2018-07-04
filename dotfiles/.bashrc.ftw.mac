@@ -61,7 +61,8 @@ alias progs='cd ~/progs'
 
 # lock screen - set "Require password [immediately] after sleep or screen saver begins"
 #/System/Library/CoreServices/"Menu Extras"/User.menu/Contents/Resources/CGSession -suspend
-SCREENSAVER='/System/Library/Frameworks/ScreenSaver.framework/Versions/A/Resources/ScreenSaverEngine.app'
+#SCREENSAVER='/System/Library/Frameworks/ScreenSaver.framework/Versions/A/Resources/ScreenSaverEngine.app'
+SCREENSAVER='ScreenSaverEngine'
 alias lll='open -a $SCREENSAVER'
 
 # dev
