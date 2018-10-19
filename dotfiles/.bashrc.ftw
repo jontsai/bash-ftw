@@ -52,9 +52,15 @@ function n {
 # \u - User name
 # \W - Current working directory (ie: Desktop/)
 # \w - Current working directory, full path (ie: /Users/Admin/Desktop)
+#
+# Color codes:
+# - https://unix.stackexchange.com/questions/124407/what-color-codes-can-i-use-in-my-ps1-prompt
+# - https://misc.flogisoft.com/bash/tip_colors_and_formatting
+#
 # Default Mac Style: PS1="\h:\W \u$"
 # Ubuntu Style: export PS1="\u@\h:\w$ "
-export PS1="[\t] \u@\h:\w\$(parse_git_branch)$ "
+#
+export PS1="\[\033[01;90m\][\t] \[\033[01;32m\]\u\[\033[00m\]@\[\033[01;32m\]\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;36m\]\$(parse_git_branch)\[\033[01;34m\]\$\[\033[00m\] "
 
 ################################################################################
 # exports
