@@ -81,6 +81,8 @@ export CLICOLOR_FORCE=1
 # Disable writing of Python bytecode (*.pyc files) -- negligible performance issue in dev
 export PYTHONDONTWRITEBYTECODE=1
 
+export TMPDIR=/tmp
+
 ################################################################################
 # aliases
 
