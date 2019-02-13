@@ -18,3 +18,6 @@ alias topmem='top -o %MEM'
 # https://github.com/guard/listen/wiki/Increasing-the-amount-of-inotify-watchers
 alias increase-inotify-watcher='echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p'
 alias show-inotify-watchers='cat /proc/sys/fs/inotify/max_user_watches'
+
+# Debian, Ubuntu
+alias aptupd='sudo apt-get update; sudo apt-get upgrade --with-new-pkgs'
