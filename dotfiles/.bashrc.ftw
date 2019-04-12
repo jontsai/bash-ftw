@@ -155,11 +155,13 @@ function git-squash {
 alias jq='jq -C'
 alias json='python -mjson.tool'
 alias keyup='. ssh-agent-init;ssh-keychain-init'
+
+echo 'Auto-initializing SSH Agent...'
 if [ `command -v ssh-agent-init` ]
 then
     . ssh-agent-init
 else
-    echo 'ssh-agent-init command not defined... skipping auto-initialization'
+    echo 'ssh-agent-init command not defined... skipped'
 fi
 
 ##
