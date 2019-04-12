@@ -106,6 +106,10 @@ alias ymsg='open -a Yahoo!\ Messenger'
 alias qs='open -a Quicksilver'
 
 ##################################################
+# Installation Cheatsheets
+alias install-homebrew='/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
+
+##################################################
 # LaunchCtl
 
 function restart-launchctl-process {

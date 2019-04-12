@@ -171,6 +171,10 @@ alias temp='cd ~/tmp'
 alias www='cd ~/www'
 
 ################################################################################
+# Installation Cheatsheets
+alias install-nvm="curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash"
+
+################################################################################
 # source other .bashrc files
 
 # Linux
