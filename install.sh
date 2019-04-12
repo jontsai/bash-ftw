@@ -59,7 +59,7 @@ if [[ $BASHRC_FILE ]]
 then 
     cp -v dotfiles/.bashrc.ftw $HOME/
     cp -v dotfiles/.git-completion.bash $HOME/
-    INCLUDE_BASHRC_SOURCE="[[ -s \"$HOME/.bashrc.ftw\" ]] && source $HOME/.bashrc.ftw"
+    INCLUDE_BASHRC_SOURCE="[[ -s \"\$HOME/.bashrc.ftw\" ]] && source \$HOME/.bashrc.ftw"
     ALREADY_EXISTS=`tail -n 1 $BASHRC_FILE`
     if [ "$ALREADY_EXISTS" == "$INCLUDE_BASHRC_SOURCE" ]
     then
