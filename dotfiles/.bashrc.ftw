@@ -151,6 +151,13 @@ function git-squash {
 }
 
 ##
+# TMUX
+alias tma='tmux attach -t'
+alias tmkill='tmux kill-session -t'
+alias tmls='tmux ls'
+alias tmnew='tmux new -s'
+
+##
 # utils
 alias jq='jq -C'
 alias json='python -mjson.tool'
