@@ -122,6 +122,7 @@ alias venv='source ./venv/bin/activate'
 # Git
 alias gb='git branch'
 alias gca='git commit -a'
+alias gcam='git commit --amend'
 alias gcb='git create-branch'
 alias gcd='git checkout develop'
 alias gcm='git checkout master'
