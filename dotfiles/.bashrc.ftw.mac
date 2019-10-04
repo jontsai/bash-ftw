@@ -129,15 +129,27 @@ then
 fi
 
 ##################################################
+# Useful Helper Functions
+
+#
+# MySQL
+
+function copy-mysql-pw {
+    cat ~/.my.cnf | grep password | cut -d = -f 2 | awk '{ printf "%s", $1 }' | pbcopy
+}
+
+#
 # Node.js
+#
 
 function n {
     $(npm bin)/$@
 }
 
-##################################################
+#
 # NTFS mounts
 # https://github.com/osxfuse/osxfuse/wiki/NTFS-3G
+#
 
 function mount-ntfs-rw {
     if [[ $# == 2 ]]
