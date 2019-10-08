@@ -135,7 +135,9 @@ fi
 # MySQL
 
 function copy-mysql-pw {
-    cat ~/.my.cnf | grep password | cut -d = -f 2 | awk '{ printf "%s", $1 }' | pbcopy
+    # cat ~/.my.cnf | grep password | cut -d = -f 2 | awk '{ printf "%s", $1 }' | pbcopy
+    # grep password ~/.my.cnf | cut -d = -f 2 | awk '{ printf "%s", $1 }' | pbcopy
+    awk -F '=' '/^password/ { printf "%s", $2 }' ~/.my.cnf | pbcopy
 }
 
 #
