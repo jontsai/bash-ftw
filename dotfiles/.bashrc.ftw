@@ -6,6 +6,10 @@
 # An opinionated .bashrc file
 #
 
+# Enable START/STOP output control (XON/XOFF flow control)
+# https://superuser.com/questions/159106/reverse-i-search-in-bash
+stty -ixon
+
 # don't execute if not an interactive BASH shell
 # `$-` shows `i` if an interactive shell
 [[ ${-#*i} != ${-} ]] || return
