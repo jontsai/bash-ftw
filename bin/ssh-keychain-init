@@ -21,7 +21,7 @@ do
     PRIV_KEY=${pubkey%.*}
     #echo ${EXTENSION}
     #echo ${PRIV_KEY}
-    if [ -e ${PRIV_KEY} ]
+    if [[ -e ${PRIV_KEY} ]]
     then
         echo Adding to keychain: ${PRIV_KEY}
         if [[ $USES_KEYCHAIN ]]
