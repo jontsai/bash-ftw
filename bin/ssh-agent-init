@@ -22,13 +22,17 @@ function ssh-agent-init-keychain {
 }
 
 function is_agent_running {
+    # returns 0 if running, 1 if not
     if [ -f $SSH_AGENT_FILENAME ]
     then
+        # check for existence of ssh-agent by SSH_AGENT_PID
         source $SSH_AGENT_FILENAME > /dev/null
         ps -p $SSH_AGENT_PID | grep ssh-agent > /dev/null
         return $?
     else
-        return 1
+        # check for existence of ssh-agent by `ssh-add -l`
+        ssh-add -l > /dev/null 2&> 1
+        return $?
     fi
 }
 
@@ -46,7 +50,12 @@ function ssh-agent-init-no-keychain {
     else
         echo 'SSH Agent already running'
     fi
-    source $SSH_AGENT_FILENAME > /dev/null
+
+    # finally, load the SSH agent env vars
+    if [ -f $SSH_AGENT_FILENAME ]
+    then
+        source $SSH_AGENT_FILENAME > /dev/null
+    fi
 }
 
 if [[ $USES_KEYCHAIN ]]
