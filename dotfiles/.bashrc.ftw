@@ -119,9 +119,11 @@ alias svns='svn status'
 
 ##
 # Python helpers
+alias ipy='ipython'
 alias rmpyc='for FILE in `find . -name "*.pyc"`; do rm -i $FILE; done'
 alias venv='source ./venv/bin/activate'
 alias vipy='venv/bin/ipython'
+alias vpip='venv/bin/pip'
 alias vpy='venv/bin/python'
 
 ##
