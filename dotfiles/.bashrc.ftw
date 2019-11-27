@@ -196,7 +196,11 @@ alias www='cd ~/www'
 # rbenv
 # https://github.com/rbenv/rbenv#installation
 
-eval "$(rbenv init -)"
+if [ `command -v rbenv` ]
+then
+    echo 'Setting rbenv...'
+    eval "$(rbenv init -)"
+fi
 
 ################################################################################
 # Installation Cheatsheets
