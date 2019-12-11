@@ -91,6 +91,31 @@ export TMPDIR=/tmp
 # aliases
 
 ##
+# Meta
+
+function rebash {
+    # reloads ~/.bashrc, ~/.bash_aliases, or ~/.bash_profile
+    if [ $KERNEL == 'Darwin' ] && [ -f $HOME/.bash_profile ]
+    then
+        BASHRC_FILE=$HOME/.bash_profile
+    elif [ -f $HOME/.bash_aliases ]
+    then
+        BASHRC_FILE=$HOME/.bash_aliases
+elif [ -f $HOME/.bashrc ]
+    then
+        BASHRC_FILE=$HOME/.bashrc
+    else
+        BASHRC_FILE=''
+    fi
+
+    if [[ $BASHRC_FILE ]]
+    then
+        echo "Reloading ${BASHRC_FILE}"
+        source $BASHRC_FILE
+    fi
+}
+
+##
 # basic commands
 alias ..='cd ..'
 alias ..2='cd ../..'
@@ -128,6 +153,7 @@ alias vpy='venv/bin/python'
 ##
 # Git
 alias gb='git branch'
+alias gbr='git branch -r'  # list Git branches on remote
 alias gca='git commit -a'
 alias gcam='git commit --amend'
 alias gcb='git create-branch'
@@ -142,6 +168,41 @@ alias gsq='git-squash'
 alias gst='git status'
 alias gitup='export GIT_TMP_BRANCH=`git rev-parse --abbrev-ref HEAD | tr -d "\n"`; git checkout master; git fetch origin; git rebase origin/master; git checkout ${GIT_TMP_BRANCH}'
 alias gitdeletemerged="git branch --merged master | grep -v 'master$' | xargs git branch -d"
+
+
+# sync all Git repository subdirectories within current directory
+function gsa {
+    cwd=`pwd`
+    echo "Syncing all Git repository subdirectories within $cwd"
+
+    # strip color codes from `ls`
+    # See: https://stackoverflow.com/questions/17998978/removing-colors-from-output
+    for dir in `ls | sed $'s,\x1b\\[[0-9;]*[a-zA-Z],,g'`
+    do
+        fulldir="${cwd}/${dir}"
+
+        if [[ -d $fulldir ]]
+        then
+            echo -e "--------------------\n"
+            echo -e "Going in to $fulldir\n"
+            cd $fulldir
+            echo -e "Fetching latest code from origin...\n"
+            git fetch origin
+            echo -e "Updating master...\n"
+            git co master && git merge origin/master
+            #git gc
+        else
+            echo "Skipping $fulldir"
+        fi
+    done
+
+    cd $cwd
+}
+
+# create a new Git branch tracking remote branch
+function gcob {
+    git checkout -B $1 origin/$1
+}
 
 function gitdeletenonmaster {
     for branch in `git branch | awk '{ print $1}' | grep -v '^*'`; do if [[ "$branch" != "master" ]]; then git branch -D $branch; fi; done
