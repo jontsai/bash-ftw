@@ -120,11 +120,18 @@ function restart-launchctl-process {
 }
 
 ##################################################
-# exports
+# export PATH overrides
 
 if [ -d /usr/local/mysql/bin ]
 then
     PATH=$PATH:/usr/local/mysql/bin
+    export PATH
+fi
+
+# MacOS bison is 2.3, prefer Homebrew's
+if [ -d /usr/local/opt/bison/bin ]
+then
+    PATH=/usr/local/opt/bison/bin:$PATH
     export PATH
 fi
 
