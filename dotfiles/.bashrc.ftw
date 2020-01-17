@@ -220,6 +220,10 @@ function git-squash {
     fi
 }
 
+function git-ls-changed {
+    git status --porcelain | grep M | awk '{print $2}'
+}
+
 ##
 # TMUX
 alias tma='tmux attach -t'
