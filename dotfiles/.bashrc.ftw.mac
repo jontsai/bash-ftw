@@ -107,6 +107,9 @@ alias qs='open -a Quicksilver'
 
 ##################################################
 # Installation Cheatsheets
+
+alias install-xcode-cli-tools='xcode-select --install'
+
 alias install-homebrew='/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
 
 ##################################################
@@ -118,6 +121,12 @@ function restart-launchctl-process {
     sleep 3
     launchctl start $process
 }
+
+##################################################
+# Mac Configuration
+
+# https://support.apple.com/en-us/HT208050
+export BASH_SILENCE_DEPRECATION_WARNING=1
 
 ##################################################
 # export PATH overrides
