@@ -6,15 +6,64 @@
 # An opinionated .bashrc file
 #
 
-# Enable START/STOP output control (XON/XOFF flow control)
-# https://superuser.com/questions/159106/reverse-i-search-in-bash
-stty -ixon
-
 # don't execute if not an interactive BASH shell
 # `$-` shows `i` if an interactive shell
 [[ ${-#*i} != ${-} ]] || return
 
+# Enable START/STOP output control (XON/XOFF flow control)
+# https://superuser.com/questions/159106/reverse-i-search-in-bash
+stty -ixon
+
+################################################################################
+# Bash Session Meta
+
+# determine the Kernel type
 KERNEL=`uname -s`
+
+function determine-bashrc {
+    if [ $KERNEL == 'Darwin' ] && [ -f $HOME/.bash_profile ]
+    then
+        BASHRC_FILE=$HOME/.bash_profile
+    elif [ -f $HOME/.bash_aliases ]
+    then
+        BASHRC_FILE=$HOME/.bash_aliases
+elif [ -f $HOME/.bashrc ]
+    then
+        BASHRC_FILE=$HOME/.bashrc
+    else
+        BASHRC_FILE=''
+    fi
+}
+determine-bashrc
+
+if [[ ${BASHFTW} == 1 ]]
+then
+    echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    echo bash-ftw has already been loaded, not reloading.
+    echo It may be included twice in your bashrc file, ${BASHRC_FILE}
+    echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+else
+    # set sentinel value to prevent double load
+    export BASHFTW=1
+
+    echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    echo Loading bash-ftw...
+fi
+
+function rebash {
+    # force reload
+    export BASHFTW=0
+
+    determine-bashrc()
+
+    # reloads ~/.bashrc, ~/.bash_aliases, or ~/.bash_profile
+
+    if [[ $BASHRC_FILE ]]
+    then
+        echo "Reloading ${BASHRC_FILE}"
+        source $BASHRC_FILE
+    fi
+}
 
 ################################################################################
 # BASH globals
@@ -89,31 +138,6 @@ export TMPDIR=/tmp
 
 ################################################################################
 # aliases
-
-##
-# Meta
-
-function rebash {
-    # reloads ~/.bashrc, ~/.bash_aliases, or ~/.bash_profile
-    if [ $KERNEL == 'Darwin' ] && [ -f $HOME/.bash_profile ]
-    then
-        BASHRC_FILE=$HOME/.bash_profile
-    elif [ -f $HOME/.bash_aliases ]
-    then
-        BASHRC_FILE=$HOME/.bash_aliases
-elif [ -f $HOME/.bashrc ]
-    then
-        BASHRC_FILE=$HOME/.bashrc
-    else
-        BASHRC_FILE=''
-    fi
-
-    if [[ $BASHRC_FILE ]]
-    then
-        echo "Reloading ${BASHRC_FILE}"
-        source $BASHRC_FILE
-    fi
-}
 
 ##
 # basic commands
@@ -312,3 +336,10 @@ do
     BASHRC_FILE="$HOME/.bashrc.${group}"
     [[ -s $BASHRC_FILE ]] && source ${BASHRC_FILE}
 done
+
+
+################################################################################
+# THE END
+
+echo Finished loading bash-ftw.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
