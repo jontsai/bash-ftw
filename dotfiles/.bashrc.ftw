@@ -47,7 +47,7 @@ else
     export BASHFTW=1
 
     echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    echo Loading bash-ftw...
+    echo ">>>>>> Loading bash-ftw <<<<<<"
 fi
 
 function rebash {
@@ -341,5 +341,5 @@ done
 ################################################################################
 # THE END
 
-echo Finished loading bash-ftw.
+echo ">>>>>> Finished loading bash-ftw <<<<<<"
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
