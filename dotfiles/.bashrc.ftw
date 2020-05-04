@@ -42,9 +42,10 @@ then
     echo bash-ftw has already been loaded, not reloading.
     echo It may be included twice in your bashrc file, ${BASHRC_FILE}
     echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    return
 else
     # set sentinel value to prevent double load
-    export BASHFTW=1
+    BASHFTW=1
 
     echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     echo ">>>>>> Loading bash-ftw <<<<<<"
@@ -52,7 +53,7 @@ fi
 
 function rebash {
     # force reload
-    export BASHFTW=0
+    BASHFTW=0
 
     determine-bashrc()
 
