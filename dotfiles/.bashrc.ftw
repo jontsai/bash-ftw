@@ -87,15 +87,19 @@ function parse_git_branch {
     then
         CURRENT_GIT_BRANCH=`git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
     else
-        echo ''
+        CURRENT_GIT_BRANCH=''
     fi
 
-    if [ ${SHOW_PARENS}  ]
+    if [ ${CURRENT_GIT_BRANCH} ]
     then
-        echo "(${CURRENT_GIT_BRANCH})"
-    else
-        echo "${CURRENT_GIT_BRANCH}"
+        if [ ${SHOW_PARENS} ]
+        then
+            echo "(${CURRENT_GIT_BRANCH})"
+        else
+            echo "${CURRENT_GIT_BRANCH}"
+        fi
     fi
+
     unset SHOW_PARENS
 }
 
