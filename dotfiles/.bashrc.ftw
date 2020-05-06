@@ -20,7 +20,7 @@ stty -ixon
 # determine the Kernel type
 KERNEL=`uname -s`
 
-function determine-bashrc {
+function determine_bashrc {
     if [ $KERNEL == 'Darwin' ] && [ -f $HOME/.bash_profile ]
     then
         BASHRC_FILE=$HOME/.bash_profile
@@ -34,7 +34,7 @@ elif [ -f $HOME/.bashrc ]
         BASHRC_FILE=''
     fi
 }
-determine-bashrc
+determine_bashrc
 
 if [[ ${BASHFTW} == 1 ]]
 then
@@ -55,7 +55,7 @@ function rebash {
     # force reload
     BASHFTW=0
 
-    determine-bashrc()
+    determine_bashrc
 
     # reloads ~/.bashrc, ~/.bash_aliases, or ~/.bash_profile
 
