@@ -76,13 +76,27 @@ umask 0002
 # BASH functions
 
 function parse_git_branch {
+    if [ ! -z $1 ] && [ $1 == '-p' ]
+    then
+        SHOW_PARENS=1
+        shift
+    fi
+
     TEST_GIT_REPO=`git rev-parse 2> /dev/null > /dev/null`
     if [[ $? ]]
     then
-        git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+        CURRENT_GIT_BRANCH=`git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
     else
         echo ''
     fi
+
+    if [ ${SHOW_PARENS}  ]
+    then
+        echo "(${CURRENT_GIT_BRANCH})"
+    else
+        echo "${CURRENT_GIT_BRANCH}"
+    fi
+    unset SHOW_PARENS
 }
 
 function grep-kill {
@@ -114,7 +128,7 @@ function n {
 # Default Mac Style: PS1="\h:\W \u$"
 # Ubuntu Style: export PS1="\u@\h:\w$ "
 #
-export PS1="\[\033[01;90m\][\t] \[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;36m\]\$(parse_git_branch)\[\033[01;34m\]\$\[\033[00m\] "
+export PS1="\[\033[01;90m\][\t] \[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;36m\]\$(parse_git_branch -p)\[\033[01;34m\]\$\[\033[00m\] "
 
 ################################################################################
 # exports
@@ -194,6 +208,7 @@ alias gdsf='git dsf'
 alias glog='git log'
 alias gpl='git pull'
 alias gpu='git push'
+alias gpuuo="git push -u origin `parse_git_branch`"  # push new branch and set origin remote as upstream
 alias groi='git rebase -i origin/master'
 alias gsq='git-squash'
 alias gst='git status'
