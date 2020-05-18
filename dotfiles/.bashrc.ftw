@@ -76,7 +76,7 @@ umask 0002
 # BASH functions
 
 function parse_git_branch {
-    if [ ! -z $1 ] && [ $1 == '-p' ]
+    if [[ ! -z $1 ]] && [[ $1 == '-p' ]]
     then
         SHOW_PARENS=1
         shift
@@ -90,9 +90,9 @@ function parse_git_branch {
         CURRENT_GIT_BRANCH=''
     fi
 
-    if [ ${CURRENT_GIT_BRANCH} ]
+    if [[ ${CURRENT_GIT_BRANCH} ]]
     then
-        if [ ${SHOW_PARENS} ]
+        if [[ ${SHOW_PARENS} ]]
         then
             echo "(${CURRENT_GIT_BRANCH})"
         else
