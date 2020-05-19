@@ -32,10 +32,18 @@ An opinionated collection of **BASH** scripts, aliases, customizations, defaults
 
 * ~~TBD~~ It's good. I use it, and you should use it to. No time to write this `README` section.
 
+## Frequently Asked Questions
+
+See [`FAQ.md`](https://github.com/jontsai/bash-ftw/blob/master/FAQ.md).
+
 ## Contributing
 
-Fork, branch, and submit a pull request.
+# Contributing
+
+Pull requests are welcome! If you would like to contribute to this project, please fork this repository, create a branch, and submit a pull request.
+
+All meaningful code contributions will be recognized in [`CONTRIBUTORS.md`](https://github.com/jontsai/bash-ftw/blob/master/CONTRIBUTORS.md).
 
 ## License
 
-MIT
+MIT, see [`LICENSE.md`](https://github.com/jontsai/bash-ftw/blob/master/LICENSE.md).
