@@ -1,4 +1,4 @@
-# bash-ftw FAQ (Frequently Asked Questions
+# bash-ftw FAQ (Frequently Asked Questions)
 
 ## SSH not working, missing SSH keys, etc.
 
