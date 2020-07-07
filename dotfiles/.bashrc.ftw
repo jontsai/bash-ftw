@@ -309,6 +309,11 @@ alias check-proxy-ip="curl -x socks5h://localhost:1080 ${ECHO_IP_URL}"
 alias check-proxy-ipv4="curl -4 -x socks5h://localhost:1080 ${ECHO_IP_URL}"
 alias check-proxy-ipv6="curl -6 -x socks5h://localhost:1080 ${ECHO_IP_URL}"
 
+##
+# Haste
+
+haste() { a=$(cat); curl -X POST -s -d "$a" https://haste.l33t.xyz/documents | awk -F '"' '{print "https://haste.l33t.xyz/"$4}'; }
+
 
 ################################################################################
 # directories
