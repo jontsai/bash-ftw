@@ -108,6 +108,12 @@ function grep-kill {
     ps -A | grep ${PATTERN} | grep -v grep | awk '{print $1}' | xargs kill
 }
 
+
+function settitle {
+    echo -ne "\e]0;$1\a"
+}
+
+
 ##
 # Node.js
 function n {
