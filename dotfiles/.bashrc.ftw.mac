@@ -158,6 +158,11 @@ export LDFLAGS="-L/usr/local/opt/bison/lib -L/usr/local/opt/flex/lib"
 export CPPFLAGS="-I/usr/local/opt/flex/include"
 
 ##################################################
+# Java / OpenJDK
+
+export PATH="/usr/local/opt/openjdk/bin:$PATH"
+
+##################################################
 # Useful Helper Functions
 
 #
