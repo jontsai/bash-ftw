@@ -108,6 +108,18 @@ function grep-kill {
     ps -A | grep ${PATTERN} | grep -v grep | awk '{print $1}' | xargs kill
 }
 
+function kill-port() {
+    # Courtesy of: https://github.com/Justintime50
+    PIDS=($(lsof -t -i:$1 | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/ /g'))
+    if [ "$PIDS" ] ; then
+        for pid in "${PIDS[@]}"; do
+            echo "Killing process $pid..."
+            kill "$pid"
+        done
+    else
+        echo "No process running on port $1"
+    fi
+}
 
 function settitle {
     echo -ne "\e]0;$1\a"
@@ -185,6 +197,7 @@ alias grep='grep --color=always'
 alias lessr='less -R'
 alias morer='more -R'
 alias retmux='tmux source-file ~/.tmux.conf'
+alias show-functions='declare -F'
 
 # common typos
 alias cd..='cd ..'

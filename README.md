@@ -38,8 +38,6 @@ See [`FAQ.md`](https://github.com/jontsai/bash-ftw/blob/master/FAQ.md).
 
 ## Contributing
 
-# Contributing
-
 Pull requests are welcome! If you would like to contribute to this project, please fork this repository, create a branch, and submit a pull request.
 
 All meaningful code contributions will be recognized in [`CONTRIBUTORS.md`](https://github.com/jontsai/bash-ftw/blob/master/CONTRIBUTORS.md).
