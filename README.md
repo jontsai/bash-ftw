@@ -4,7 +4,7 @@ An opinionated collection of **BASH** scripts, aliases, customizations, defaults
 ## Jump Right In, Install!
 
 1. `git clone https://github.com/jontsai/bash-ftw`
-2. `cd bash-ftw; Make`
+2. `cd bash-ftw; make install`
 3. Profit
 
 ## Why I Made This
