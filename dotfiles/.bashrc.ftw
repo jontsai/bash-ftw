@@ -336,6 +336,11 @@ fi
 alias dcdu='docker-compose down --remove-orphans;docker-compose up -d'
 
 ##
+# Hacktoolkit (https://github.com/hacktoolkit)
+# See also: http://github.com/hacktoolkit/python-htk
+alias fdb='touch /tmp/fdebug.log; tail -f /tmp/fdebug.log'
+
+##
 # Internet / Networking
 
 ECHO_IP_URL='ifconfig.co'
