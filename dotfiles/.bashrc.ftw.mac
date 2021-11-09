@@ -128,6 +128,8 @@ function restart-launchctl-process {
 # https://support.apple.com/en-us/HT208050
 export BASH_SILENCE_DEPRECATION_WARNING=1
 
+export APPLE_SSH_ADD_BEHAVIOR=macos
+
 ##################################################
 # export PATH overrides
 
