@@ -14,19 +14,19 @@ fi
 
 function ssh-agent-init-keychain {
     SSH_AGENT_FILENAME="$HOME/.keychain/`hostname`-sh"
-    if [ -f $SSH_AGENT_FILENAME ]
+    if [ -f "${SSH_AGENT_FILENAME}" ]
     then
         # the SSH agent file was created by keychain
-        source $SSH_AGENT_FILENAME > /dev/null
+        source "${SSH_AGENT_FILENAME}" > /dev/null
     fi
 }
 
 function is_agent_running {
     # returns 0 if running, 1 if not
-    if [ -f $SSH_AGENT_FILENAME ]
+    if [ -f "${SSH_AGENT_FILENAME}" ]
     then
         # check for existence of ssh-agent by SSH_AGENT_PID
-        source $SSH_AGENT_FILENAME > /dev/null
+        source "${SSH_AGENT_FILENAME}" > /dev/null
         ps -p $SSH_AGENT_PID | grep ssh-agent > /dev/null
         return $?
     else
@@ -43,18 +43,18 @@ function ssh-agent-init-no-keychain {
     then
         echo 'Starting new SSH Agent'
         # create the SSH agent file if it doesn't exist or SSH agent is not running
-        touch $SSH_AGENT_FILENAME
-        ssh-agent -s > $SSH_AGENT_FILENAME
-        chmod a+x $SSH_AGENT_FILENAME
-        perl -i -n -e 'print $_ unless /^echo/' $SSH_AGENT_FILENAME
+        touch "${SSH_AGENT_FILENAME}"
+        ssh-agent -s > "${SSH_AGENT_FILENAME}"
+        chmod a+x "${SSH_AGENT_FILENAME}"
+        perl -i -n -e 'print $_ unless /^echo/' "${SSH_AGENT_FILENAME}"
     else
         echo 'SSH Agent already running'
     fi
 
     # finally, load the SSH agent env vars
-    if [ -f $SSH_AGENT_FILENAME ]
+    if [ -f "${SSH_AGENT_FILENAME}" ]
     then
-        source $SSH_AGENT_FILENAME > /dev/null
+        source "${SSH_AGENT_FILENAME}" > /dev/null
     fi
 }
 
