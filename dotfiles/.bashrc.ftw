@@ -310,6 +310,15 @@ function git-ls-changed {
     git status --porcelain | grep M | awk '{print $2}'
 }
 
+function git-delete-tag {
+    # delete tag locally
+    git tag -d $1
+    # delete tag in all remotes
+    for remote in $(git remote); do
+        git push $remote :refs/tags/$1;
+    done
+}
+
 ##
 # TMUX
 alias tma='tmux attach -t'
