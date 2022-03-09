@@ -319,6 +319,7 @@ function git-delete-tag {
         git push $remote :refs/tags/$1
     done
 }
+
 function git-rename-branch {
     # renames the local branch and on ALL remotes
     git branch -m $1 $2
