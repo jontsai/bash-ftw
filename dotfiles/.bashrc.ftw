@@ -314,8 +314,18 @@ function git-delete-tag {
     # delete tag locally
     git tag -d $1
     # delete tag in all remotes
-    for remote in $(git remote); do
-        git push $remote :refs/tags/$1;
+    for remote in $(git remote)
+    do
+        git push $remote :refs/tags/$1
+    done
+}
+function git-rename-branch {
+    # renames the local branch and on ALL remotes
+    git branch -m $1 $2
+    for remote in $(git remote)
+    do
+        git push $remote -u $2
+        git push $remote --delete $1
     done
 }
 
