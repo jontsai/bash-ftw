@@ -310,6 +310,15 @@ function git-ls-changed {
     git status --porcelain | grep M | awk '{print $2}'
 }
 
+function git-rename-branch {
+    # renames the local branch and on ALL remotes
+    git branch -m $1 $2
+    for remote in $(git remote); do
+        git push $remote -u $2
+        git push $remote --delete $1;
+    done
+}
+
 ##
 # TMUX
 alias tma='tmux attach -t'
