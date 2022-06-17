@@ -30,7 +30,12 @@ fi
 alias editapache='sudo emacs /private/etc/apache2/users/`whoami`.conf'
 if [[ -z `which emacs` ]];
 then
-    alias emacs='/Applications/Emacs.app/Contents/MacOS/Emacs -nw'
+    if [[ -f /Applications/Emacs.app/Contents/MacOS/Emacs ]]
+    then
+        alias emacs='/Applications/Emacs.app/Contents/MacOS/Emacs -nw'
+    else
+        echo 'Emacs is not installed'
+    fi
 fi
 alias flushdns='sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder'
 alias hidden_files_show='defaults write com.apple.finder AppleShowAllFiles TRUE;killall Finder'
@@ -200,6 +205,35 @@ function mount-ntfs-rw {
         echo "Usage: mount-ntfs-rw /dev/DEVICE /Volumes/VOLUME"
     fi
 }
+
+
+#
+# Networking
+#
+
+function set-hostname {
+    # Source: https://apple.stackexchange.com/a/287775/132120
+
+    if [[ $# == 1 ]]
+    then
+        HOSTNAME=$1
+
+        # Set primary hostname
+        sudo scutil --set HostName ${HOSTNAME}
+
+        # Set Bonjour hostname
+        sudo scutil --set LocalHostName ${HOSTNAME}
+
+        # Set Computer name
+        sudo scutil --set ComputerName ${HOSTNAME}
+
+        # Flush DNS cache
+        dscacheutil -flushcache
+    else
+        echo "Usage: set-hostname <HOSTNAME>"
+    fi
+}
+
 
 ##################################################
 # Setup Amazon EC2 Command-Line Tools
