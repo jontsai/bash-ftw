@@ -425,6 +425,10 @@ export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
+# Use pyenv pip
+alias pip="python3 -m pip"
+alias pip3="python3 -m pip"
+
 ################################################################################
 # Installation Cheatsheets
 alias install-nvm="curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash"
