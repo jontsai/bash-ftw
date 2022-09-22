@@ -242,6 +242,10 @@ alias vpip='venv/bin/pip'
 alias vpy='venv/bin/python'
 
 ##
+# Emacs helpers
+alias rmelc='for FILE in `find . -name "*.elc"`; do rm -i $FILE; done'
+
+##
 # Git
 alias gb='git branch'
 alias gbr='git branch -r'  # list Git branches on remote
