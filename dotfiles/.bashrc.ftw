@@ -113,9 +113,10 @@ function kill-port() {
     # See `man kill` for allowed kill signals
     PORT=$1
     SIGNAL=$2
+    SUDO=$3
 
     SIGNAL_ARG=""
-    PIDS=($(lsof -t -i:$PORT | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/ /g'))
+    PIDS=($($SUDO lsof -t -i:$PORT | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/ /g'))
 
     if [[ ! -z $SIGNAL ]]
     then
@@ -131,8 +132,8 @@ function kill-port() {
     then
         for pid in "${PIDS[@]}"; do
             echo "Killing process $pid..."
-            echo kill ${SIGNAL_ARG} ${pid}
-            kill ${SIGNAL_ARG} ${pid}
+            echo ${SUDO} kill ${SIGNAL_ARG} ${pid}
+            ${SUDO} kill ${SIGNAL_ARG} ${pid}
         done
     else
         echo "No process running on port ${PORT}"
