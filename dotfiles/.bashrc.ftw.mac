@@ -115,7 +115,7 @@ alias qs='open -a Quicksilver'
 
 alias install-xcode-cli-tools='xcode-select --install'
 
-alias install-homebrew='/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
+alias install-homebrew='/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"'
 
 ##################################################
 # LaunchCtl
