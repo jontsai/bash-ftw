@@ -231,6 +231,10 @@ alias show-functions='declare -F'
 alias cd..='cd ..'
 
 ##
+# GPG
+alias gpgl='gpg --list-keys'
+
+##
 # dev
 alias edithosts='sudo emacs /etc/hosts'
 alias rmemacsbackups='for FILE in `find . -name "*~"`; do rm -i $FILE; done'
