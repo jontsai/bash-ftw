@@ -238,6 +238,7 @@ alias cd..='cd ..'
 alias gpgl='gpg --list-secret-keys --keyid-format=long'
 alias gpg-export-pubkey='gpg --armor --export'
 alias gpg-export-secret='gpg --export-secret-keys --armor'
+alias gpg-gen='gpg --full-generate-key'
 alias gpg-restart='gpgconf --kill all'
 alias gpg-test='echo "test" | gpg --clearsign'
 
