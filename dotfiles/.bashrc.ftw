@@ -393,7 +393,7 @@ fi
 
 ##
 # Docker
-alias dcdu='docker-compose down --remove-orphans;docker-compose up -d'
+alias dcdu='docker compose down --remove-orphans;docker compose up -d'
 
 ##
 # Hacktoolkit (https://github.com/hacktoolkit)
