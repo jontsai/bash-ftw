@@ -371,6 +371,17 @@ function edit-matching-files {
 
 
 ##
+# MySQL
+
+
+function tailmysql {
+    sudo mysql -e "SET GLOBAL general_log = 'ON';"
+    sudo less +F $(mysql -Nse "SELECT @@general_log_file")
+    sudo mysql -e "SET GLOBAL general_log = 'OFF';"
+}
+
+
+##
 # TMUX
 alias tma='tmux attach -t'
 alias tmkill='tmux kill-session -t'
