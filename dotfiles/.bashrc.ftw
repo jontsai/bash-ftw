@@ -358,7 +358,9 @@ function git-rename-branch {
 
 
 ##
-# Editing
+# Editing, Diffing, Reading, etc
+
+
 function edit-matching-files {
     QUERY=${1}
     if [[ -z $QUERY ]]
@@ -368,6 +370,14 @@ function edit-matching-files {
         $EDITOR $(${SEARCH_UTIL} "${1}" | cut -d : -f 1 | sort | uniq)
     fi
 }
+
+function dsf { 
+    F1=$1
+    F2=$2
+    diff -u ${F1} ${F2} | diff-so-fancy
+}
+
+
 
 
 ##
