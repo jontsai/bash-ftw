@@ -80,6 +80,7 @@ alias photobooth='open -a Photo\ Booth'
 # net
 alias facetime='open -a FaceTime'
 alias safari='open -a Safari'
+alias tailscale='open -a Tailscale'
 # util
 alias keychain='open -a /Applications/Utilities/Keychain\ Access.app'
 alias prefs='open -a System\ Preferences'
