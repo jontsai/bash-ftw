@@ -70,17 +70,25 @@ alias progs='cd ~/progs'
 SCREENSAVER='ScreenSaverEngine'
 alias lll='open -a $SCREENSAVER'
 
+##
 # dev
 alias txt='open -a TextEdit'
 alias xcode='open -a Xcode'
+
+##
 # media
 alias imovie='open -a iMovie'
 alias itunes='open -a iTunes'
 alias photobooth='open -a Photo\ Booth'
+
+##
 # net
 alias facetime='open -a FaceTime'
 alias safari='open -a Safari'
-alias tailscale='open -a Tailscale'
+# Tailscale VPN - https://tailscale.com/kb/1080/cli?tab=macos
+alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+
+##
 # util
 alias keychain='open -a /Applications/Utilities/Keychain\ Access.app'
 alias prefs='open -a System\ Preferences'
