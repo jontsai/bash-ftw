@@ -14,8 +14,10 @@
 # https://superuser.com/questions/159106/reverse-i-search-in-bash
 stty -ixon
 
+
 ################################################################################
 # Bash Session Meta
+
 
 # determine the Kernel type
 KERNEL=`uname -s`
@@ -66,14 +68,18 @@ function rebash {
     fi
 }
 
+
 ################################################################################
 # BASH globals
+
 
 # http://en.wikipedia.org/wiki/Umask
 umask 0002
 
+
 ################################################################################
 # BASH functions
+
 
 function parse_git_branch {
     if [[ ! -z $1 ]] && [[ $1 == '-p' ]]
@@ -171,8 +177,10 @@ function n {
 #
 export PS1="\[\033[01;90m\][\t] \[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;36m\]\$(parse_git_branch -p)\[\033[01;34m\]\$\[\033[00m\] "
 
+
 ################################################################################
 # exports
+
 
 # local scripts and /usr/local/bin, /usr/local/sbin
 PATH=$HOME/bin:$PATH:/usr/local/sbin:/usr/local/bin
@@ -202,8 +210,10 @@ export PYTHONDONTWRITEBYTECODE=1
 
 export TMPDIR=/tmp
 
+
 ################################################################################
 # aliases
+
 
 ##
 # basic commands
@@ -371,7 +381,7 @@ function edit-matching-files {
     fi
 }
 
-function dsf { 
+function dsf {
     F1=$1
     F2=$2
     diff -u ${F1} ${F2} | diff-so-fancy
@@ -441,15 +451,18 @@ haste() { a=$(cat); curl -X POST -s -d "$a" https://haste.l33t.xyz/documents | a
 ################################################################################
 # directories
 
+
 alias bin='cd ~/bin'
 alias code='cd ~/code'
 alias dload='cd ~/dload'
 alias temp='cd ~/tmp'
 alias www='cd ~/www'
 
+
 ################################################################################
 # rbenv
 # https://github.com/rbenv/rbenv#installation
+
 
 if [ `command -v rbenv` ]
 then
@@ -457,14 +470,19 @@ then
     eval "$(rbenv init -)"
 fi
 
+
 ################################################################################
 # Installation Cheatsheets
+
+
 alias install-nvm="curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.2/install.sh | bash"
 alias install-rust="curl https://sh.rustup.rs -sSf | sh"
 alias install-tpm="git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm"
 
+
 ################################################################################
 # source other .bashrc files
+
 
 # Linux
 [[ $KERNEL == 'Linux' ]] && [[ -s "$HOME/.bashrc.ftw.linux" ]] && source "$HOME/.bashrc.ftw.linux"
@@ -485,6 +503,17 @@ do
     BASHRC_FILE="$HOME/.bashrc.${group}"
     [[ -s $BASHRC_FILE ]] && source ${BASHRC_FILE}
 done
+
+
+################################################################################
+# Load direnv if installed
+# https://github.com/direnv/direnv
+
+
+if [[ -s `which direnv` ]]
+then
+    eval "$(direnv hook bash)"
+fi
 
 
 ################################################################################
