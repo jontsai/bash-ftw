@@ -170,8 +170,11 @@ fi
 ##################################################
 # Build Dependencies
 
-export LDFLAGS="-L/usr/local/opt/bison/lib -L/usr/local/opt/flex/lib"
-export CPPFLAGS="-I/usr/local/opt/flex/include"
+
+export LDFLAGS="-L/opt/homebrew/opt/bison/lib -L/opt/homebrew/opt/flex/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/bison/include -I/opt/homebrew/opt/flex/include"
+export PATH="/opt/homebrew/opt/bison/bin:/opt/homebrew/opt/flex/bin:$PATH"
+
 
 ##################################################
 # Java / OpenJDK
