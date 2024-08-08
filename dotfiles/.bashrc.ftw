@@ -463,11 +463,22 @@ alias www='cd ~/www'
 # rbenv
 # https://github.com/rbenv/rbenv#installation
 
+if [ -d "$HOME/.rbenv/bin" ]
+then
+    export PATH="$HOME/.rbenv/bin:$PATH"
+elif [ -x "/opt/homebrew/bin/rbenv" ]
+then
+    export PATH="/opt/homebrew/bin/:$PATH"
+fi
 
-if [ `command -v rbenv` ]
+
+
+if [ command -v rbenv > /dev/null 2>&1 ] || [[ -nz `which rbenv` ]]
 then
     echo 'Setting rbenv...'
     eval "$(rbenv init -)"
+else
+    echo 'rbenv not found... skipping'
 fi
 
 
