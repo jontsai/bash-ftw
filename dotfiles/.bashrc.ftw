@@ -473,7 +473,7 @@ fi
 
 
 
-if [ command -v rbenv > /dev/null 2>&1 ] || [[ -nz `which rbenv` ]]
+if [ command -v rbenv > /dev/null 2>&1 ] || [[ -n `which rbenv` ]]
 then
     echo 'Setting rbenv...'
     eval "$(rbenv init -)"
