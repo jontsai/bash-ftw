@@ -12,7 +12,8 @@ then
     USES_KEYCHAIN=1
 fi
 
-KEYS="$HOME/.ssh/*.pub"
+HOSTNAME=`hostname`
+KEYS="$HOME/.ssh/*${HOSTNAME}*.pub $HOME/.ssh/*.pub"
 TOADD=""
 for pubkey in $KEYS
 do
