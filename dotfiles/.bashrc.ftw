@@ -265,6 +265,7 @@ alias rmpyc='for FILE in `find . -name "*.pyc"`; do rm -i $FILE; done'
 alias vipy='venv/bin/ipython'
 alias vpip='venv/bin/pip'
 alias vpy='venv/bin/python'
+alias vpytest='venv/bin/pytest'
 
 ##
 # Emacs helpers
