@@ -295,6 +295,7 @@ alias gpuuo='parse_git_branch | xargs git push -u origin'  # push new branch and
 alias groi='git rebase -i origin/${GIT_DEFAULT_BRANCH}'
 alias gsq='git-squash'
 alias gst='git status'
+alias git-last-raw='git log -1 --format="commit %H%nAuthor: %an <%ae>%nDate:   %ad%n%n%B"'
 alias gitup='export GIT_TMP_BRANCH=`git rev-parse --abbrev-ref HEAD | tr -d "\n"`; git checkout ${GIT_DEFAULT_BRANCH}; git fetch origin; git rebase origin/${GIT_DEFAULT_BRANCH}; git checkout ${GIT_TMP_BRANCH}'
 alias gitdeletemerged='git branch --merged ${GIT_DEFAULT_BRANCH} | grep -v "${GIT_DEFAULT_BRANCH}$" | xargs git branch -d'
 
