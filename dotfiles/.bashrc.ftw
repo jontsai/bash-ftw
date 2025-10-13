@@ -374,9 +374,8 @@ function git-rename-branch {
     done
 }
 
-
 ##
-# Editing, Diffing, Reading, etc
+# Text Processing & File Utilities
 
 
 function edit-matching-files {
@@ -389,6 +388,7 @@ function edit-matching-files {
     fi
 }
 
+
 function dsf {
     F1=$1
     F2=$2
@@ -396,6 +396,13 @@ function dsf {
 }
 
 
+function get-packages {
+    # Read from STDIN and process package names
+    # Removes comments (lines starting with #), empty lines, and trims whitespace
+    # Usage: cat package-file.txt | get-packages
+    # or: get-packages < package-file.txt
+    sed '/^#/ d; s/#.*$//; s/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$'
+}
 
 
 ##
