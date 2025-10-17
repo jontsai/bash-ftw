@@ -508,6 +508,29 @@ alias install-pip="curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py"
 alias install-rust="curl https://sh.rustup.rs -sSf | sh"
 alias install-tpm="git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm"
 
+# GitHub CLI installation
+function install-gh {
+    if [[ $KERNEL == 'Darwin' ]]; then
+        echo "Installing GitHub CLI via Homebrew..."
+        brew install gh
+    elif [[ $KERNEL == 'Linux' ]]; then
+        echo "Installing GitHub CLI via apt..."
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+        && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+        && sudo apt update \
+        && sudo apt install gh -y
+    else
+        echo "Unsupported OS: $KERNEL"
+        echo "Visit https://cli.github.com for installation instructions"
+        return 1
+    fi
+
+    echo ""
+    echo "GitHub CLI installed successfully!"
+    echo "Run 'gh auth login' to authenticate"
+}
+
 
 ################################################################################
 # source other .bashrc files
