@@ -289,6 +289,7 @@ alias gco='git checkout'
 alias gcp='git checkout gh-pages'
 alias gdsf='git dsf'
 alias glog='git log'
+alias gpfwl='git push --force-with-lease'
 alias gpl='git pull'
 alias gpu='git push'
 alias gpuuo='parse_git_branch | xargs git push -u origin'  # push new branch and set origin remote as upstream
