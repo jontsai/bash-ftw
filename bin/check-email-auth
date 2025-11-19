@@ -1,0 +1,291 @@
+#!/bin/bash
+#
+# check-email-auth
+# author: Jonathan Tsai <hello@jontsai.com>
+#
+# Check email authentication records (SPF, DKIM, DMARC) for a domain
+# Helps diagnose why emails might be landing in spam
+#
+
+set -e
+
+# Color codes for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+BOLD='\033[1m'
+
+function usage {
+    echo "Usage: $(basename $0) DOMAIN"
+    echo ""
+    echo "Check email authentication records for a domain"
+    echo ""
+    echo "Examples:"
+    echo "  $(basename $0) hacktoolkit.com"
+    echo "  $(basename $0) google.com"
+    exit 1
+}
+
+function print_header {
+    local title="$1"
+    local width=80
+    echo ""
+    echo -e "${BOLD}${BLUE}┌$(printf '─%.0s' $(seq 1 $((width-2))))┐${NC}"
+    echo -e "${BOLD}${BLUE}│${NC} ${BOLD}$title${NC}"
+    echo -e "${BOLD}${BLUE}└$(printf '─%.0s' $(seq 1 $((width-2))))┘${NC}"
+}
+
+function print_success {
+    echo -e "${GREEN}✓${NC} $1"
+}
+
+function print_warning {
+    echo -e "${YELLOW}⚠${NC} $1"
+}
+
+function print_error {
+    echo -e "${RED}✗${NC} $1"
+}
+
+function print_box {
+    local text="$1"
+    local color="${2:-$NC}"
+    local width=80
+    echo -e "${color}╔$(printf '═%.0s' $(seq 1 $((width-2))))╗${NC}"
+    echo -e "${color}║${NC} ${BOLD}$text${NC}"
+    echo -e "${color}╚$(printf '═%.0s' $(seq 1 $((width-2))))╝${NC}"
+}
+
+function check_spf {
+    local domain=$1
+    print_header "SPF (Sender Policy Framework) Record"
+
+    local spf_record=$(dig "$domain" TXT +short | grep -i "v=spf1" || true)
+
+    if [ -n "$spf_record" ]; then
+        print_success "SPF record found"
+        echo -e "${BOLD}Record:${NC}"
+        echo "  $spf_record"
+        echo ""
+        echo -e "${BLUE}ℹ${NC} SPF specifies which mail servers can send email for this domain"
+    else
+        print_error "No SPF record found"
+        echo ""
+        echo -e "${YELLOW}Impact:${NC} Any server can send email claiming to be from @$domain"
+        echo -e "${YELLOW}        This significantly increases spam likelihood!${NC}"
+        echo ""
+        echo -e "${BOLD}Recommended fix:${NC}"
+        echo "  Add a TXT record to $domain:"
+        echo -e "  ${GREEN}v=spf1 include:_spf.google.com ~all${NC}"
+    fi
+}
+
+function check_dmarc {
+    local domain=$1
+    print_header "DMARC (Domain-based Message Authentication) Record"
+
+    local dmarc_record=$(dig "_dmarc.$domain" TXT +short || true)
+
+    if [ -n "$dmarc_record" ]; then
+        print_success "DMARC record found"
+        echo -e "${BOLD}Record:${NC}"
+        echo "  $dmarc_record"
+        echo ""
+
+        # Parse policy
+        if echo "$dmarc_record" | grep -q "p=none"; then
+            echo -e "${YELLOW}Policy:${NC} none (monitoring only - no enforcement)"
+            echo -e "${YELLOW}⚠${NC} Consider upgrading to 'quarantine' or 'reject' for better protection"
+        elif echo "$dmarc_record" | grep -q "p=quarantine"; then
+            echo -e "${YELLOW}Policy:${NC} quarantine (suspicious emails go to spam)"
+            echo -e "${GREEN}✓${NC} Good protection level"
+        elif echo "$dmarc_record" | grep -q "p=reject"; then
+            echo -e "${GREEN}Policy:${NC} reject (unauthorized emails are blocked)"
+            echo -e "${GREEN}✓${NC} Strongest protection!"
+        fi
+        echo ""
+        echo -e "${BLUE}ℹ${NC} DMARC tells receiving servers what to do with failed authentication"
+    else
+        print_error "No DMARC record found"
+        echo ""
+        echo -e "${YELLOW}Impact:${NC} You can't control what happens to spoofed/forged emails"
+        echo -e "${YELLOW}        No visibility into email authentication failures${NC}"
+        echo ""
+        echo -e "${BOLD}Recommended fix:${NC}"
+        echo "  Add a TXT record to _dmarc.$domain:"
+        echo -e "  ${GREEN}v=DMARC1; p=quarantine; rua=mailto:dmarc@$domain${NC}"
+    fi
+}
+
+function check_dkim {
+    local domain=$1
+    print_header "DKIM (DomainKeys Identified Mail) Records"
+
+    # Common DKIM selectors to check
+    local selectors=("default" "google" "k1" "s1" "selector1" "dkim" "mail" "email" "mx")
+    local found=0
+
+    for selector in "${selectors[@]}"; do
+        local dkim_record=$(dig "${selector}._domainkey.$domain" TXT +short 2>/dev/null || true)
+
+        if [ -n "$dkim_record" ]; then
+            print_success "DKIM record found for selector: ${BOLD}${selector}${NC}"
+            echo -e "${BOLD}Record:${NC}"
+            echo "  $dkim_record" | fold -w 78 -s | sed 's/^/  /'
+            found=1
+            echo ""
+        fi
+    done
+
+    if [ $found -eq 0 ]; then
+        print_warning "No DKIM records found for common selectors"
+        echo ""
+        echo -e "${YELLOW}Searched selectors:${NC} ${selectors[*]}"
+        echo ""
+        echo -e "${BOLD}DKIM selector depends on your email provider:${NC}"
+        echo "  • Google Workspace: 'google'"
+        echo "  • SendGrid: 's1' or 's2'"
+        echo "  • Mailgun: 'k1'"
+        echo "  • AWS SES: various (check your SES settings)"
+        echo "  • Microsoft 365: 'selector1' and 'selector2'"
+    else
+        echo -e "${BLUE}ℹ${NC} DKIM adds a cryptographic signature to verify email authenticity"
+    fi
+}
+
+function check_mx {
+    local domain=$1
+    print_header "MX (Mail Exchange) Records"
+
+    local mx_records=$(dig "$domain" MX +short || true)
+
+    if [ -n "$mx_records" ]; then
+        print_success "MX records found"
+        echo -e "${BOLD}Mail servers:${NC}"
+        echo "$mx_records" | sort -n | sed 's/^/  /'
+
+        # Detect common providers
+        if echo "$mx_records" | grep -q "google"; then
+            echo ""
+            echo -e "${BLUE}📧 Detected: Google Workspace${NC}"
+            echo "  → For DKIM, use selector 'google'"
+            echo "  → For SPF, use: v=spf1 include:_spf.google.com ~all"
+        elif echo "$mx_records" | grep -q "outlook\|office365"; then
+            echo ""
+            echo -e "${BLUE}📧 Detected: Microsoft 365${NC}"
+            echo "  → For DKIM, use selectors 'selector1' and 'selector2'"
+        elif echo "$mx_records" | grep -q "sendgrid"; then
+            echo ""
+            echo -e "${BLUE}📧 Detected: SendGrid${NC}"
+            echo "  → For DKIM, use selector 's1' or 's2'"
+        fi
+    else
+        print_error "No MX records found"
+        echo ""
+        echo -e "${RED}⚠ This domain cannot receive email!${NC}"
+    fi
+}
+
+function check_all_txt {
+    local domain=$1
+    print_header "Other TXT Records"
+
+    local txt_records=$(dig "$domain" TXT +short | grep -v "v=spf1" | grep -v "v=DMARC1" || true)
+
+    if [ -n "$txt_records" ]; then
+        echo -e "${BOLD}Found:${NC}"
+        echo "$txt_records" | sed 's/^/  /'
+        echo ""
+        echo -e "${BLUE}ℹ${NC} These may include verification records for Google, Microsoft, etc."
+    else
+        echo "No other TXT records found"
+    fi
+}
+
+function summary {
+    local domain=$1
+    local has_spf=$2
+    local has_dmarc=$3
+    local has_dkim=$4
+
+    echo ""
+    echo ""
+    local width=80
+    echo -e "${BOLD}${BLUE}╔$(printf '═%.0s' $(seq 1 $((width-2))))╗${NC}"
+    echo -e "${BOLD}${BLUE}║${NC} ${BOLD}SUMMARY FOR: $domain${NC}"
+    echo -e "${BOLD}${BLUE}╠$(printf '═%.0s' $(seq 1 $((width-2))))╣${NC}"
+
+    local score=0
+    [ "$has_spf" = "yes" ] && score=$((score + 1))
+    [ "$has_dmarc" = "yes" ] && score=$((score + 1))
+    [ "$has_dkim" = "yes" ] && score=$((score + 1))
+
+    echo -e "${BOLD}${BLUE}║${NC} "
+    echo -e "${BOLD}${BLUE}║${NC}   SPF:   $([ "$has_spf" = "yes" ] && echo -e "${GREEN}✓ CONFIGURED${NC}" || echo -e "${RED}✗ MISSING${NC}")"
+    echo -e "${BOLD}${BLUE}║${NC}   DMARC: $([ "$has_dmarc" = "yes" ] && echo -e "${GREEN}✓ CONFIGURED${NC}" || echo -e "${RED}✗ MISSING${NC}")"
+    echo -e "${BOLD}${BLUE}║${NC}   DKIM:  $([ "$has_dkim" = "yes" ] && echo -e "${GREEN}✓ CONFIGURED${NC}" || echo -e "${RED}✗ MISSING${NC}")"
+    echo -e "${BOLD}${BLUE}║${NC} "
+    echo -e "${BOLD}${BLUE}╠$(printf '═%.0s' $(seq 1 $((width-2))))╣${NC}"
+
+    if [ $score -eq 3 ]; then
+        echo -e "${BOLD}${BLUE}║${NC} ${GREEN}${BOLD}✓ ALL CHECKS PASSED!${NC}"
+        echo -e "${BOLD}${BLUE}║${NC} ${GREEN}Your email authentication is properly configured.${NC}"
+    elif [ $score -eq 0 ]; then
+        echo -e "${BOLD}${BLUE}║${NC} ${RED}${BOLD}✗ CRITICAL: No authentication records found!${NC}"
+        echo -e "${BOLD}${BLUE}║${NC} ${RED}Your emails are VERY LIKELY to land in spam.${NC}"
+    else
+        echo -e "${BOLD}${BLUE}║${NC} ${YELLOW}${BOLD}⚠ WARNING: Some records are missing!${NC}"
+        echo -e "${BOLD}${BLUE}║${NC} ${YELLOW}Missing records increase spam likelihood.${NC}"
+    fi
+
+    echo -e "${BOLD}${BLUE}║${NC} "
+    echo -e "${BOLD}${BLUE}║${NC} Email Deliverability Score: ${BOLD}$score/3${NC}"
+    echo -e "${BOLD}${BLUE}║${NC} "
+    echo -e "${BOLD}${BLUE}╚$(printf '═%.0s' $(seq 1 $((width-2))))╝${NC}"
+}
+
+# Main script
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+DOMAIN=$1
+
+# Print fancy title
+echo ""
+echo -e "${BOLD}${BLUE}╔════════════════════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BOLD}${BLUE}║${NC}                   ${BOLD}EMAIL AUTHENTICATION CHECKER${NC}                          ${BOLD}${BLUE}║${NC}"
+echo -e "${BOLD}${BLUE}╠════════════════════════════════════════════════════════════════════════════╣${NC}"
+echo -e "${BOLD}${BLUE}║${NC}  Domain: ${BOLD}$DOMAIN${NC}"
+echo -e "${BOLD}${BLUE}╚════════════════════════════════════════════════════════════════════════════╝${NC}"
+
+# Check if dig is available
+if ! command -v dig &> /dev/null; then
+    echo "Error: 'dig' command not found. Please install dnsutils/bind-tools"
+    exit 1
+fi
+
+# Run all checks and track results
+check_mx "$DOMAIN"
+
+HAS_SPF="no"
+check_spf "$DOMAIN"
+dig "$DOMAIN" TXT +short | grep -q "v=spf1" && HAS_SPF="yes" || true
+
+HAS_DMARC="no"
+check_dmarc "$DOMAIN"
+dig "_dmarc.$DOMAIN" TXT +short | grep -q "v=DMARC1" && HAS_DMARC="yes" || true
+
+HAS_DKIM="no"
+check_dkim "$DOMAIN"
+for selector in default google k1 s1 selector1; do
+    dig "${selector}._domainkey.$DOMAIN" TXT +short 2>/dev/null | grep -q "v=DKIM1" && HAS_DKIM="yes" && break || true
+done
+
+check_all_txt "$DOMAIN"
+
+summary "$DOMAIN" "$HAS_SPF" "$HAS_DMARC" "$HAS_DKIM"
+
+echo ""
