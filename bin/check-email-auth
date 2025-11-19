@@ -18,13 +18,17 @@ NC='\033[0m' # No Color
 BOLD='\033[1m'
 
 function usage {
-    echo "Usage: $(basename $0) DOMAIN"
+    echo "Usage: $(basename $0) [OPTIONS] DOMAIN"
     echo ""
     echo "Check email authentication records for a domain"
     echo ""
+    echo "Options:"
+    echo "  -n, --no-color    Disable colored output"
+    echo "  -h, --help        Show this help message"
+    echo ""
     echo "Examples:"
     echo "  $(basename $0) hacktoolkit.com"
-    echo "  $(basename $0) google.com"
+    echo "  $(basename $0) --no-color google.com"
     exit 1
 }
 
@@ -247,11 +251,43 @@ function summary {
 }
 
 # Main script
-if [ $# -eq 0 ]; then
+# Parse arguments
+NO_COLOR=0
+DOMAIN=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -n|--no-color)
+            NO_COLOR=1
+            shift
+            ;;
+        -h|--help)
+            usage
+            ;;
+        -*)
+            echo "Unknown option: $1"
+            usage
+            ;;
+        *)
+            DOMAIN=$1
+            shift
+            ;;
+    esac
+done
+
+if [ -z "$DOMAIN" ]; then
     usage
 fi
 
-DOMAIN=$1
+# Disable colors if requested
+if [ $NO_COLOR -eq 1 ]; then
+    RED=''
+    GREEN=''
+    YELLOW=''
+    BLUE=''
+    NC=''
+    BOLD=''
+fi
 
 # Print fancy title
 echo ""
