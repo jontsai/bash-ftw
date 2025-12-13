@@ -7,7 +7,8 @@
 # Helps diagnose SSL/TLS certificate issues
 #
 
-set -e
+# Note: Don't use set -e as many openssl commands intentionally fail
+# when testing for unsupported protocols/ciphers
 
 # Color codes for output
 RED='\033[0;31m'
@@ -20,17 +21,31 @@ BOLD='\033[1m'
 function usage {
     echo "Usage: $(basename $0) [OPTIONS] DOMAIN[:PORT]"
     echo ""
-    echo "Check SSL certificate details for a domain"
+    echo "Comprehensive SSL/TLS certificate and security checker"
+    echo "Similar to SSL Labs but runs locally from the command line"
     echo ""
     echo "Options:"
-    echo "  -v, --verbose   Show full certificate chain and details"
+    echo "  -v, --verbose   Full analysis including:"
+    echo "                    - Key strength & signature algorithm"
+    echo "                    - Cipher suite analysis"
+    echo "                    - TLS compression (CRIME vulnerability)"
+    echo "                    - OCSP stapling"
+    echo "                    - Certificate fingerprint"
+    echo "                    - HTTP security headers (HSTS, CSP, etc.)"
+    echo "                    - DNS CAA records"
     echo "  -n, --no-color  Disable colored output"
     echo "  -h, --help      Show this help message"
     echo ""
+    echo "Default checks (always run):"
+    echo "  - Certificate validity and expiration"
+    echo "  - Certificate chain verification"
+    echo "  - TLS protocol support (1.0, 1.1, 1.2, 1.3)"
+    echo "  - SSL Grade (A-F based on configuration)"
+    echo ""
     echo "Examples:"
-    echo "  $(basename $0) hacktoolkit.com"
-    echo "  $(basename $0) hacktoolkit.com:8443"
-    echo "  $(basename $0) -v hacktoolkit.com"
+    echo "  $(basename $0) hacktoolkit.com          # Quick check"
+    echo "  $(basename $0) -v hacktoolkit.com       # Full analysis"
+    echo "  $(basename $0) hacktoolkit.com:8443     # Custom port"
     exit 1
 }
 
@@ -55,11 +70,16 @@ function print_error {
     echo -e "${RED}✗${NC} $1"
 }
 
+function print_progress {
+    echo -e "${BLUE}⟳${NC} $1..."
+}
+
 function check_certificate {
     local domain=$1
     local port=$2
 
     print_header "Certificate Details"
+    print_progress "Fetching certificate"
 
     # Get certificate info
     local cert_info=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" 2>/dev/null)
@@ -114,6 +134,7 @@ function check_chain {
     local port=$2
 
     print_header "Certificate Chain"
+    print_progress "Verifying certificate chain"
 
     local chain_info=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" -showcerts 2>/dev/null)
 
@@ -148,12 +169,29 @@ function check_protocols {
 
     print_header "Protocol Support"
 
+    # Initialize protocol variables
+    TLS10_SUPPORTED="no"
+    TLS11_SUPPORTED="no"
+    TLS12_SUPPORTED="no"
+    TLS13_SUPPORTED="no"
+
     # Check TLS versions
     for proto in tls1 tls1_1 tls1_2 tls1_3; do
-        local result=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" -${proto} 2>&1)
         local proto_name=$(echo $proto | sed 's/tls1$/TLS 1.0/' | sed 's/tls1_1/TLS 1.1/' | sed 's/tls1_2/TLS 1.2/' | sed 's/tls1_3/TLS 1.3/')
+        echo -ne "${BLUE}⟳${NC} Testing $proto_name...\r"
+        local result=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" -${proto} 2>&1)
+        echo -ne "                              \r"  # Clear the line
 
-        if echo "$result" | grep -q "CONNECTED"; then
+        # Check for successful handshake (must have certificate chain, not "no peer certificate")
+        if echo "$result" | grep -q "Certificate chain" && ! echo "$result" | grep -q "no peer certificate"; then
+            # Set protocol support variables
+            case "$proto" in
+                tls1) TLS10_SUPPORTED="yes" ;;
+                tls1_1) TLS11_SUPPORTED="yes" ;;
+                tls1_2) TLS12_SUPPORTED="yes" ;;
+                tls1_3) TLS13_SUPPORTED="yes" ;;
+            esac
+
             if [[ "$proto" == "tls1" || "$proto" == "tls1_1" ]]; then
                 print_warning "$proto_name supported (deprecated)"
             else
@@ -167,6 +205,18 @@ function check_protocols {
             fi
         fi
     done
+
+    # Summary line
+    echo ""
+    if [ "$TLS10_SUPPORTED" = "no" ] && [ "$TLS11_SUPPORTED" = "no" ] && [ "$TLS12_SUPPORTED" = "yes" ]; then
+        if [ "$TLS13_SUPPORTED" = "yes" ]; then
+            print_success "Protocol configuration: Excellent (TLS 1.2 & 1.3 only)"
+        else
+            print_success "Protocol configuration: Good (TLS 1.2 only)"
+        fi
+    elif [ "$TLS10_SUPPORTED" = "yes" ] || [ "$TLS11_SUPPORTED" = "yes" ]; then
+        print_warning "Protocol configuration: Needs improvement (legacy protocols enabled)"
+    fi
 }
 
 function check_san {
@@ -184,11 +234,347 @@ function check_san {
     fi
 }
 
+function check_key_strength {
+    local domain=$1
+    local port=$2
+
+    print_header "Key Strength & Signature"
+    print_progress "Analyzing key strength"
+
+    local cert=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" 2>/dev/null)
+    local key_info=$(echo "$cert" | openssl x509 -noout -text 2>/dev/null)
+
+    # Public key type and size
+    local pub_key=$(echo "$key_info" | grep -A1 "Public-Key:" | head -2)
+    local key_type=$(echo "$key_info" | grep "Public Key Algorithm:" | cut -d: -f2 | tr -d ' ')
+    local key_bits=$(echo "$pub_key" | grep -oE "[0-9]+" | head -1)
+
+    echo -e "${BOLD}Public Key Type:${NC} $key_type"
+    echo -e "${BOLD}Key Size:${NC} ${key_bits} bits"
+
+    if [ -n "$key_bits" ]; then
+        if [ "$key_bits" -ge 2048 ]; then
+            print_success "Key size is adequate (>= 2048 bits)"
+            KEY_STRENGTH_OK="yes"
+        else
+            print_error "Key size is weak (< 2048 bits)"
+            KEY_STRENGTH_OK="no"
+        fi
+    fi
+
+    # Signature algorithm
+    local sig_alg=$(echo "$key_info" | grep "Signature Algorithm" | head -1 | cut -d: -f2 | tr -d ' ')
+    echo -e "${BOLD}Signature Algorithm:${NC} $sig_alg"
+
+    if echo "$sig_alg" | grep -qi "sha1"; then
+        print_error "SHA-1 signature (deprecated, insecure)"
+        SIG_ALG_OK="no"
+    elif echo "$sig_alg" | grep -qi "md5"; then
+        print_error "MD5 signature (broken, insecure)"
+        SIG_ALG_OK="no"
+    elif echo "$sig_alg" | grep -qi "sha256\|sha384\|sha512"; then
+        print_success "Strong signature algorithm"
+        SIG_ALG_OK="yes"
+    else
+        SIG_ALG_OK="yes"
+    fi
+
+    # Store key bits for grade calculation
+    KEY_BITS=$key_bits
+}
+
+function check_ciphers {
+    local domain=$1
+    local port=$2
+
+    print_header "Cipher Analysis"
+    print_progress "Analyzing cipher suites"
+
+    # Get negotiated cipher - parse the "New, TLSv1.3, Cipher is XXX" line
+    local cipher_output=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" 2>/dev/null)
+    local cipher_line=$(echo "$cipher_output" | grep "Cipher is")
+    local cipher=$(echo "$cipher_line" | sed 's/.*Cipher is //')
+    local protocol=$(echo "$cipher_output" | grep "^Protocol" | cut -d: -f2 | tr -d ' ')
+
+    # If protocol not found via "Protocol:", try parsing from cipher line
+    if [ -z "$protocol" ]; then
+        protocol=$(echo "$cipher_line" | grep -oE "TLSv[0-9.]+" | head -1)
+    fi
+
+    echo -e "${BOLD}Negotiated Protocol:${NC} $protocol"
+    echo -e "${BOLD}Negotiated Cipher:${NC} $cipher"
+    echo ""
+
+    # Check for forward secrecy
+    # TLS 1.3 ciphers all have forward secrecy by design
+    # TLS 1.2 needs ECDHE or DHE in cipher name
+    if echo "$protocol" | grep -q "TLSv1.3"; then
+        print_success "Forward Secrecy: Enabled (TLS 1.3 - all ciphers have PFS)"
+        FORWARD_SECRECY="yes"
+    elif echo "$cipher" | grep -qE "ECDHE|DHE"; then
+        print_success "Forward Secrecy: Enabled (PFS)"
+        FORWARD_SECRECY="yes"
+    else
+        print_warning "Forward Secrecy: Not detected in negotiated cipher"
+        FORWARD_SECRECY="no"
+    fi
+
+    # Check for weak ciphers (test if server accepts them)
+    # Must force TLS 1.2 because weak ciphers don't exist in TLS 1.3
+    echo ""
+    echo -e "${BOLD}Weak Cipher Tests:${NC}"
+    WEAK_CIPHERS_FOUND="no"
+
+    # Test NULL ciphers (force TLS 1.2)
+    echo -ne "${BLUE}⟳${NC} Testing NULL ciphers...\r"
+    local null_result=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" -tls1_2 -cipher "NULL" 2>&1)
+    if echo "$null_result" | grep -q "Certificate chain" && ! echo "$null_result" | grep -q "no peer certificate"; then
+        print_error "NULL ciphers supported (no encryption!)"
+        WEAK_CIPHERS_FOUND="yes"
+    else
+        print_success "NULL ciphers: Not supported"
+    fi
+
+    # Test RC4 (force TLS 1.2)
+    echo -ne "${BLUE}⟳${NC} Testing RC4 ciphers...\r"
+    local rc4_result=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" -tls1_2 -cipher "RC4" 2>&1)
+    if echo "$rc4_result" | grep -q "Certificate chain" && ! echo "$rc4_result" | grep -q "no peer certificate"; then
+        print_error "RC4 ciphers supported (weak)"
+        WEAK_CIPHERS_FOUND="yes"
+    else
+        print_success "RC4 ciphers: Not supported"
+    fi
+
+    # Test 3DES (force TLS 1.2)
+    echo -ne "${BLUE}⟳${NC} Testing 3DES ciphers...\r"
+    local des3_result=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" -tls1_2 -cipher "3DES" 2>&1)
+    if echo "$des3_result" | grep -q "Certificate chain" && ! echo "$des3_result" | grep -q "no peer certificate"; then
+        print_warning "3DES ciphers supported (weak, Sweet32 vulnerable)"
+        WEAK_CIPHERS_FOUND="yes"
+    else
+        print_success "3DES ciphers: Not supported"
+    fi
+
+    # Test EXPORT ciphers (force TLS 1.2)
+    echo -ne "${BLUE}⟳${NC} Testing EXPORT ciphers...\r"
+    local export_result=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" -tls1_2 -cipher "EXPORT" 2>&1)
+    if echo "$export_result" | grep -q "Certificate chain" && ! echo "$export_result" | grep -q "no peer certificate"; then
+        print_error "EXPORT ciphers supported (very weak!)"
+        WEAK_CIPHERS_FOUND="yes"
+    else
+        print_success "EXPORT ciphers: Not supported"
+    fi
+}
+
+function check_compression {
+    local domain=$1
+    local port=$2
+
+    print_header "TLS Compression (CRIME Vulnerability)"
+    print_progress "Checking TLS compression"
+
+    local compression=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" 2>/dev/null | grep "Compression:")
+
+    if echo "$compression" | grep -qi "NONE"; then
+        print_success "TLS Compression: Disabled (safe from CRIME attack)"
+        COMPRESSION_OK="yes"
+    elif [ -z "$compression" ]; then
+        echo "  Unable to determine compression status"
+        COMPRESSION_OK="yes"
+    else
+        print_error "TLS Compression: Enabled (vulnerable to CRIME attack)"
+        COMPRESSION_OK="no"
+    fi
+}
+
+function check_ocsp {
+    local domain=$1
+    local port=$2
+
+    print_header "OCSP Stapling"
+    print_progress "Checking OCSP stapling"
+
+    local ocsp_response=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" -status 2>/dev/null)
+    local ocsp_status=$(echo "$ocsp_response" | grep -A2 "OCSP Response Status:")
+
+    if echo "$ocsp_status" | grep -qi "successful"; then
+        print_success "OCSP Stapling: Enabled"
+        local ocsp_date=$(echo "$ocsp_response" | grep "This Update:" | head -1)
+        [ -n "$ocsp_date" ] && echo "  $ocsp_date"
+        OCSP_STAPLING="yes"
+    else
+        print_warning "OCSP Stapling: Not enabled (revocation checks may be slower)"
+        OCSP_STAPLING="no"
+    fi
+}
+
+function check_fingerprint {
+    local domain=$1
+    local port=$2
+
+    print_header "Certificate Identifiers"
+    print_progress "Extracting certificate identifiers"
+
+    local cert=$(echo | openssl s_client -servername "$domain" -connect "${domain}:${port}" 2>/dev/null)
+
+    local sha256=$(echo "$cert" | openssl x509 -noout -fingerprint -sha256 2>/dev/null | cut -d= -f2)
+    local serial=$(echo "$cert" | openssl x509 -noout -serial 2>/dev/null | cut -d= -f2)
+
+    echo -e "${BOLD}Serial Number:${NC}"
+    echo "  $serial"
+    echo -e "${BOLD}SHA-256 Fingerprint:${NC}"
+    echo "  $sha256"
+}
+
+function check_security_headers {
+    local domain=$1
+    local port=$2
+
+    print_header "HTTP Security Headers"
+    print_progress "Fetching HTTP headers"
+
+    # Check if curl is available
+    if ! command -v curl &> /dev/null; then
+        echo "  (curl not available - skipping header checks)"
+        return
+    fi
+
+    local headers=$(curl -sI --max-time 10 "https://${domain}/" 2>/dev/null)
+
+    if [ -z "$headers" ]; then
+        echo "  Unable to fetch HTTP headers"
+        return
+    fi
+
+    # HSTS (most important for SSL)
+    if echo "$headers" | grep -qi "strict-transport-security"; then
+        local hsts_value=$(echo "$headers" | grep -i "strict-transport-security" | cut -d: -f2- | tr -d '\r')
+        print_success "HSTS: Enabled"
+        echo "       $hsts_value"
+
+        # Check for preload and includeSubDomains
+        if echo "$hsts_value" | grep -qi "preload"; then
+            print_success "  HSTS Preload: Yes"
+        fi
+        if echo "$hsts_value" | grep -qi "includeSubDomains"; then
+            print_success "  Include Subdomains: Yes"
+        fi
+        HSTS_ENABLED="yes"
+    else
+        print_warning "HSTS: Not set (browsers won't enforce HTTPS)"
+        HSTS_ENABLED="no"
+    fi
+
+    echo ""
+
+    # Other security headers
+    local other_headers=("X-Content-Type-Options" "X-Frame-Options" "X-XSS-Protection" "Content-Security-Policy" "Referrer-Policy")
+    for header in "${other_headers[@]}"; do
+        if echo "$headers" | grep -qi "^${header}:"; then
+            print_success "$header: Present"
+        else
+            echo "  $header: Not set"
+        fi
+    done
+}
+
+function check_caa {
+    local domain=$1
+
+    print_header "DNS CAA Records"
+    print_progress "Querying DNS CAA records"
+
+    # Check if dig is available
+    if ! command -v dig &> /dev/null; then
+        echo "  (dig not available - skipping CAA check)"
+        return
+    fi
+
+    local caa=$(dig +short CAA "$domain" 2>/dev/null)
+
+    if [ -n "$caa" ]; then
+        print_success "CAA records found:"
+        echo "$caa" | while read -r line; do
+            echo "  $line"
+        done
+    else
+        # Check parent domain
+        local parent=$(echo "$domain" | cut -d. -f2-)
+        local parent_caa=$(dig +short CAA "$parent" 2>/dev/null)
+        if [ -n "$parent_caa" ]; then
+            echo "  No CAA on $domain, but found on parent $parent:"
+            echo "$parent_caa" | while read -r line; do
+                echo "    $line"
+            done
+        else
+            print_warning "No CAA records (any CA can issue certificates)"
+        fi
+    fi
+}
+
+function calculate_grade {
+    # Scoring system (start at 100, deduct for issues)
+    local score=100
+    local issues=""
+
+    # Critical issues (major deductions)
+    [ "$CHAIN_OK" != "yes" ] && { score=$((score - 40)); issues="${issues}Chain verification failed (-40)\n"; }
+    [ "$DAYS_LEFT" -lt 0 ] && { score=$((score - 50)); issues="${issues}Certificate expired (-50)\n"; }
+    [ "$KEY_STRENGTH_OK" = "no" ] && { score=$((score - 30)); issues="${issues}Weak key size (-30)\n"; }
+    [ "$SIG_ALG_OK" = "no" ] && { score=$((score - 25)); issues="${issues}Weak signature algorithm (-25)\n"; }
+    [ "$WEAK_CIPHERS_FOUND" = "yes" ] && { score=$((score - 20)); issues="${issues}Weak ciphers supported (-20)\n"; }
+
+    # Protocol issues (aligned with SSL Labs scoring)
+    # SSL Labs caps at B for TLS 1.0/1.1 support
+    [ "$TLS10_SUPPORTED" = "yes" ] && { score=$((score - 10)); issues="${issues}TLS 1.0 supported (-10)\n"; }
+    [ "$TLS11_SUPPORTED" = "yes" ] && { score=$((score - 5)); issues="${issues}TLS 1.1 supported (-5)\n"; }
+    [ "$TLS12_SUPPORTED" != "yes" ] && { score=$((score - 20)); issues="${issues}TLS 1.2 not supported (-20)\n"; }
+
+    # Moderate issues
+    [ "$COMPRESSION_OK" = "no" ] && { score=$((score - 15)); issues="${issues}TLS compression enabled (-15)\n"; }
+    [ "$DAYS_LEFT" -lt 30 ] && [ "$DAYS_LEFT" -ge 0 ] && { score=$((score - 10)); issues="${issues}Certificate expiring soon (-10)\n"; }
+
+    # Minor issues (small deductions) - only if the check was actually run
+    [ "$FORWARD_SECRECY" = "no" ] && { score=$((score - 5)); issues="${issues}No forward secrecy (-5)\n"; }
+    [ "$HSTS_ENABLED" = "no" ] && { score=$((score - 5)); issues="${issues}HSTS not enabled (-5)\n"; }
+    [ "$OCSP_STAPLING" = "no" ] && { score=$((score - 2)); issues="${issues}OCSP stapling not enabled (-2)\n"; }
+
+    # Ensure score doesn't go below 0
+    [ $score -lt 0 ] && score=0
+
+    # Determine grade
+    if [ $score -ge 98 ]; then
+        GRADE="A+"
+        GRADE_COLOR="${GREEN}"
+    elif [ $score -ge 90 ]; then
+        GRADE="A"
+        GRADE_COLOR="${GREEN}"
+    elif [ $score -ge 80 ]; then
+        GRADE="B"
+        GRADE_COLOR="${YELLOW}"
+    elif [ $score -ge 70 ]; then
+        GRADE="C"
+        GRADE_COLOR="${YELLOW}"
+    elif [ $score -ge 60 ]; then
+        GRADE="D"
+        GRADE_COLOR="${RED}"
+    else
+        GRADE="F"
+        GRADE_COLOR="${RED}"
+    fi
+
+    GRADE_SCORE=$score
+    GRADE_ISSUES=$issues
+}
+
 function summary {
     local domain=$1
     local port=$2
     local days_left=$3
     local chain_ok=$4
+
+    # Calculate grade before displaying summary
+    calculate_grade
 
     echo ""
     echo ""
@@ -196,22 +582,62 @@ function summary {
     echo -e "${BOLD}${BLUE}╔$(printf '═%.0s' $(seq 1 $((width-2))))╗${NC}"
     echo -e "${BOLD}${BLUE}║${NC} ${BOLD}SUMMARY FOR: ${domain}:${port}${NC}"
     echo -e "${BOLD}${BLUE}╠$(printf '═%.0s' $(seq 1 $((width-2))))╣${NC}"
-    echo -e "${BOLD}${BLUE}║${NC} "
+    echo -e "${BOLD}${BLUE}║${NC}"
 
+    # Display grade prominently (inner box is 37 chars wide, content is 35)
+    # Calculate padding for centered grade (handles A, A+, B, etc.)
+    local grade_len=${#GRADE}
+    local total_content=35
+    local padding_total=$((total_content - grade_len))
+    local pad_left=$((padding_total / 2))
+    local pad_right=$((padding_total - pad_left))
+    local left_spaces=$(printf '%*s' "$pad_left" '')
+    local right_spaces=$(printf '%*s' "$pad_right" '')
+
+    echo -e "${BOLD}${BLUE}║${NC}   ┌─────────────────────────────────────┐"
+    echo -e "${BOLD}${BLUE}║${NC}   │          ${BOLD}SSL GRADE${NC}                  │"
+    echo -e "${BOLD}${BLUE}║${NC}   │                                     │"
+    echo -e "${BOLD}${BLUE}║${NC}   │${left_spaces}${GRADE_COLOR}${BOLD}${GRADE}${NC}${right_spaces}│"
+    echo -e "${BOLD}${BLUE}║${NC}   │          ${BOLD}Score: ${GRADE_SCORE}/100${NC}              │"
+    echo -e "${BOLD}${BLUE}║${NC}   └─────────────────────────────────────┘"
+    echo -e "${BOLD}${BLUE}║${NC}"
+
+    # Certificate status
     if [ $days_left -gt 30 ] && [ "$chain_ok" = "yes" ]; then
         echo -e "${BOLD}${BLUE}║${NC} ${GREEN}${BOLD}✓ SSL CERTIFICATE IS HEALTHY${NC}"
-        echo -e "${BOLD}${BLUE}║${NC} ${GREEN}Certificate is valid and chain verifies correctly.${NC}"
+        echo -e "${BOLD}${BLUE}║${NC}   Certificate is valid and chain verifies correctly."
     elif [ $days_left -lt 0 ]; then
         echo -e "${BOLD}${BLUE}║${NC} ${RED}${BOLD}✗ CERTIFICATE HAS EXPIRED!${NC}"
-        echo -e "${BOLD}${BLUE}║${NC} ${RED}Immediate action required.${NC}"
+        echo -e "${BOLD}${BLUE}║${NC}   ${RED}Immediate action required.${NC}"
     elif [ $days_left -lt 30 ]; then
         echo -e "${BOLD}${BLUE}║${NC} ${YELLOW}${BOLD}⚠ CERTIFICATE EXPIRING SOON${NC}"
-        echo -e "${BOLD}${BLUE}║${NC} ${YELLOW}Renew within $days_left days.${NC}"
+        echo -e "${BOLD}${BLUE}║${NC}   ${YELLOW}Renew within $days_left days.${NC}"
     else
         echo -e "${BOLD}${BLUE}║${NC} ${YELLOW}${BOLD}⚠ CHAIN VERIFICATION ISSUE${NC}"
     fi
 
-    echo -e "${BOLD}${BLUE}║${NC} "
+    # Show deductions if not perfect score
+    if [ "$GRADE_SCORE" -lt 100 ] && [ -n "$GRADE_ISSUES" ]; then
+        echo -e "${BOLD}${BLUE}║${NC}"
+        echo -e "${BOLD}${BLUE}║${NC} ${BOLD}Score Deductions:${NC}"
+        echo -e "$GRADE_ISSUES" | while read -r line || [ -n "$line" ]; do
+            [ -n "$line" ] && echo -e "${BOLD}${BLUE}║${NC}   ${YELLOW}• $line${NC}"
+        done
+    fi
+
+    # Quick recommendations
+    echo -e "${BOLD}${BLUE}║${NC}"
+    if [ "$GRADE" = "A+" ]; then
+        echo -e "${BOLD}${BLUE}║${NC} ${GREEN}${BOLD}Perfect!${NC} Your SSL configuration is excellent."
+    elif [ "$GRADE" = "A" ]; then
+        echo -e "${BOLD}${BLUE}║${NC} ${GREEN}${BOLD}Excellent!${NC} Your SSL configuration meets best practices."
+    elif [ "$GRADE" = "B" ]; then
+        echo -e "${BOLD}${BLUE}║${NC} ${YELLOW}${BOLD}Good.${NC} Minor improvements possible for optimal security."
+    else
+        echo -e "${BOLD}${BLUE}║${NC} ${RED}${BOLD}Action needed.${NC} Review issues above to improve your grade."
+    fi
+
+    echo -e "${BOLD}${BLUE}║${NC}"
     echo -e "${BOLD}${BLUE}╚$(printf '═%.0s' $(seq 1 $((width-2))))╝${NC}"
 }
 
@@ -282,6 +708,21 @@ echo -e "${BOLD}${BLUE}╠══════════════════
 echo -e "${BOLD}${BLUE}║${NC}  Target: ${BOLD}${DOMAIN}:${PORT}${NC}"
 echo -e "${BOLD}${BLUE}╚════════════════════════════════════════════════════════════════════════════╝${NC}"
 
+# Initialize global variables for grade calculation
+# Use "unchecked" for optional checks that weren't run
+KEY_STRENGTH_OK="yes"
+SIG_ALG_OK="yes"
+KEY_BITS=2048
+FORWARD_SECRECY="unchecked"
+WEAK_CIPHERS_FOUND="no"
+COMPRESSION_OK="yes"
+HSTS_ENABLED="unchecked"
+OCSP_STAPLING="unchecked"
+TLS10_SUPPORTED="no"
+TLS11_SUPPORTED="no"
+TLS12_SUPPORTED="yes"
+TLS13_SUPPORTED="no"
+
 # Run checks
 check_certificate "$DOMAIN" "$PORT"
 
@@ -298,11 +739,27 @@ CHAIN_OK="no"
 
 check_chain "$DOMAIN" "$PORT"
 
+# Always run protocol check (needed for grade)
+check_protocols "$DOMAIN" "$PORT"
+
 if [ $VERBOSE -eq 1 ]; then
     check_san "$DOMAIN" "$PORT"
-    check_protocols "$DOMAIN" "$PORT"
+    check_key_strength "$DOMAIN" "$PORT"
+    check_ciphers "$DOMAIN" "$PORT"
+    check_compression "$DOMAIN" "$PORT"
+    check_ocsp "$DOMAIN" "$PORT"
+    check_fingerprint "$DOMAIN" "$PORT"
+    check_security_headers "$DOMAIN" "$PORT"
+    check_caa "$DOMAIN"
 fi
 
 summary "$DOMAIN" "$PORT" "$DAYS_LEFT" "$CHAIN_OK"
 
 echo ""
+
+# Exit code: 0 for grades A-C, 1 for D-F or critical issues
+if [ "$GRADE" = "D" ] || [ "$GRADE" = "F" ] || [ "$DAYS_LEFT" -lt 0 ]; then
+    exit 1
+else
+    exit 0
+fi
