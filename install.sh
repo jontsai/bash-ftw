@@ -55,31 +55,31 @@ else
     BASHRC_FILE=''
 fi
 
-if [[ $BASHRC_FILE ]]
-then 
-    cp -v dotfiles/.bashrc.ftw $HOME/
-    cp -v dotfiles/.git-completion.bash $HOME/
-    INCLUDE_BASHRC_SOURCE="[[ -s \"\$HOME/.bashrc.ftw\" ]] && source \$HOME/.bashrc.ftw"
-    ALREADY_EXISTS=`tail -n 1 $BASHRC_FILE`
-    if [ "$ALREADY_EXISTS" == "$INCLUDE_BASHRC_SOURCE" ]
-    then
-        echo "bash-ftw is already included in $BASHRC_FILE"
-    else
-        echo "Adding bash-ftw include to $BASHRC_FILE"
-        echo "$INCLUDE_BASHRC_SOURCE" >> $BASHRC_FILE
-    fi
-    if [ $KERNEL == 'Darwin' ]
-    then
-        echo .bash-ftw.mac
-        cp -v dotfiles/.bashrc.ftw.mac $HOME/
-    fi
-    if [ $KERNEL == 'Linux' ]
-    then
-        echo .bash-ftw.linux
-        cp -v dotfiles/.bashrc.ftw.linux $HOME/
-    fi
+if [[ ! -f $BASHRC_FILE ]]
+then
+    touch $BASHRC_FILE
+fi
+
+cp -v dotfiles/.bashrc.ftw $HOME/
+cp -v dotfiles/.git-completion.bash $HOME/
+INCLUDE_BASHRC_SOURCE="[[ -s \"\$HOME/.bashrc.ftw\" ]] && source \$HOME/.bashrc.ftw"
+ALREADY_EXISTS=`tail -n 1 $BASHRC_FILE`
+if [ "$ALREADY_EXISTS" == "$INCLUDE_BASHRC_SOURCE" ]
+then
+    echo "bash-ftw is already included in $BASHRC_FILE"
 else
-    echo 'Not installing .bashrc.ftw'
+    echo "Adding bash-ftw include to $BASHRC_FILE"
+    echo "$INCLUDE_BASHRC_SOURCE" >> $BASHRC_FILE
+fi
+if [ $KERNEL == 'Darwin' ]
+then
+    echo .bash-ftw.mac
+    cp -v dotfiles/.bashrc.ftw.mac $HOME/
+fi
+if [ $KERNEL == 'Linux' ]
+then
+    echo .bash-ftw.linux
+    cp -v dotfiles/.bashrc.ftw.linux $HOME/
 fi
 
 echo ''
