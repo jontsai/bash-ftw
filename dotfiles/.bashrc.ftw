@@ -945,7 +945,7 @@ fi
 # Installation Cheatsheets
 
 
-alias install-claude="npm install -g @anthropic-ai/claude-code"
+alias install-claude="curl -fsSL https://claude.ai/install.sh | bash"
 alias install-cursor="curl https://cursor.com/install -fsS | bash"
 alias install-nvm="curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
 alias install-pip="curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py"
