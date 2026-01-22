@@ -380,6 +380,444 @@ function git-rename-branch {
     done
 }
 
+
+################################################################################
+# Git Worktrees
+#
+# The .worktrees Standard:
+#   ~/code/
+#   ├── project-a/              # main worktree (unchanged)
+#   ├── project-b/              # main worktree (unchanged)
+#   └── .worktrees/             # hidden directory for ALL project worktrees
+#       ├── project-a/
+#       │   ├── feature-x/
+#       │   └── bugfix-y/
+#       └── project-b/
+#           └── refactor-z/
+#
+
+# Base directory for all code (override in .bashrc.$USER if needed)
+CODE_DIR="${CODE_DIR:-$HOME/code}"
+WORKTREES_DIR="$CODE_DIR/.worktrees"
+
+# Protected branches that shouldn't have worktrees (override in .bashrc.$USER if needed)
+GWT_PROTECTED_BRANCHES="${GWT_PROTECTED_BRANCHES:-main master develop development staging release}"
+
+# Helper: detect project name from current directory
+function _gwt_detect_project {
+    local dir="$PWD"
+
+    # Check if we're in a worktree directory
+    if [[ "$dir" == "$WORKTREES_DIR/"* ]]; then
+        # Extract project name: $WORKTREES_DIR/<project>/...
+        local rel="${dir#$WORKTREES_DIR/}"
+        echo "${rel%%/*}"
+        return 0
+    fi
+
+    # Check if we're in a main repo directory
+    if [[ "$dir" == "$CODE_DIR/"* ]]; then
+        local rel="${dir#$CODE_DIR/}"
+        # Skip hidden directories (like .worktrees itself)
+        if [[ "$rel" != .* ]]; then
+            echo "${rel%%/*}"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+# Helper: check if a branch is protected
+function _gwt_is_protected_branch {
+    local branch=$1
+    local protected
+
+    for protected in $GWT_PROTECTED_BRANCHES; do
+        if [[ "$branch" == "$protected" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# Helper: detect current worktree name (returns empty if in main repo)
+function _gwt_detect_worktree {
+    local dir="$PWD"
+
+    # Only works if we're in a worktree directory
+    if [[ "$dir" == "$WORKTREES_DIR/"* ]]; then
+        # Extract worktree name: $WORKTREES_DIR/<project>/<worktree>/...
+        local rel="${dir#$WORKTREES_DIR/}"
+        local after_project="${rel#*/}"
+        echo "${after_project%%/*}"
+        return 0
+    fi
+
+    return 1
+}
+
+# cd into a worktree (or main repo if no worktree specified)
+function gwt {
+    local detected=$(_gwt_detect_project)
+
+    # No args: if inside project, go to main repo
+    if [[ $# -eq 0 ]]; then
+        if [[ -n "$detected" ]]; then
+            cd "$CODE_DIR/$detected"
+        else
+            echo "Usage: gwt [project] [worktree-name]"
+            echo "       (project auto-detected when inside a worktree directory)"
+            return 1
+        fi
+        return
+    fi
+
+    # One arg: could be worktree (if inside project) or project name
+    if [[ $# -eq 1 ]]; then
+        if [[ -n "$detected" ]]; then
+            # Inside project - check if arg is a worktree name
+            if [[ -d "$WORKTREES_DIR/$detected/$1" ]]; then
+                cd "$WORKTREES_DIR/$detected/$1"
+                return
+            fi
+        fi
+        # Treat as project name, go to main repo
+        cd "$CODE_DIR/$1"
+        return
+    fi
+
+    # Two args: explicit project and worktree
+    cd "$WORKTREES_DIR/$1/$2"
+}
+
+# cd to a worktree (auto-detects project from current directory)
+function gwt-cd {
+    local detected=$(_gwt_detect_project)
+
+    if [[ $# -eq 0 ]]; then
+        echo "Usage: gwt-cd [project] <worktree>"
+        echo "       (project auto-detected when inside a worktree directory)"
+        return 1
+    fi
+
+    local project name
+
+    if [[ $# -eq 1 ]]; then
+        if [[ -n "$detected" ]]; then
+            project=$detected
+            name=$1
+        else
+            echo "Error: Not inside a project. Specify project explicitly."
+            echo "Usage: gwt-cd <project> <worktree>"
+            return 1
+        fi
+    else
+        project=$1
+        name=$2
+    fi
+
+    if [[ ! -d "$WORKTREES_DIR/$project/$name" ]]; then
+        echo "Error: Worktree '$name' not found for project '$project'"
+        return 1
+    fi
+
+    cd "$WORKTREES_DIR/$project/$name"
+}
+
+# Create a worktree (auto-detects if branch exists or needs to be created)
+function gwt-mk {
+    local force=false
+    if [[ "$1" == "--force" || "$1" == "-f" ]]; then
+        force=true
+        shift
+    fi
+
+    local project branch base
+
+    # Auto-detect project if inside a worktree-enabled directory
+    local detected=$(_gwt_detect_project)
+    if [[ -n "$detected" && $# -le 2 ]]; then
+        # Inside project: gwt-mk <branch> [base]
+        project=$detected
+        branch=$1
+        base=${2:-${GIT_DEFAULT_BRANCH}}
+    else
+        # Outside project: gwt-mk <project> <branch> [base]
+        project=$1
+        branch=$2
+        base=${3:-${GIT_DEFAULT_BRANCH}}
+    fi
+
+    if [[ -z "$project" || -z "$branch" ]]; then
+        echo "Usage: gwt-mk [--force] [project] <branch> [base-branch]"
+        echo "       (project auto-detected when inside a worktree directory)"
+        echo "       If branch exists, creates worktree for it"
+        echo "       If branch doesn't exist, creates new branch from base-branch"
+        return 1
+    fi
+
+    if [[ "$force" == false ]] && _gwt_is_protected_branch "$branch"; then
+        echo "Warning: '$branch' is a protected branch. Creating worktrees for it is unusual."
+        echo "Use 'gwt-mk --force $branch' to override."
+        echo "(Configure with GWT_PROTECTED_BRANCHES variable)"
+        return 1
+    fi
+
+    mkdir -p "$WORKTREES_DIR/$project"
+
+    # Check if branch exists locally or remotely
+    if git -C "$CODE_DIR/$project" show-ref --verify --quiet "refs/heads/$branch" 2>/dev/null || \
+       git -C "$CODE_DIR/$project" show-ref --verify --quiet "refs/remotes/origin/$branch" 2>/dev/null; then
+        # Branch exists - create worktree for it
+        git -C "$CODE_DIR/$project" worktree add "$WORKTREES_DIR/$project/$branch" "$branch"
+    else
+        # Branch doesn't exist - create new branch from base
+        git -C "$CODE_DIR/$project" worktree add -b "$branch" "$WORKTREES_DIR/$project/$branch" "$base"
+    fi
+}
+
+# List all worktrees for a project (auto-detects from current directory)
+function gwt-ls {
+    local project=${1:-$(_gwt_detect_project)}
+
+    if [[ -z "$project" ]]; then
+        echo "Usage: gwt-ls [project]"
+        echo ""
+        echo "All projects with worktrees:"
+        ls -1 "$WORKTREES_DIR" 2>/dev/null || echo "No worktrees yet."
+        return
+    fi
+
+    # Get worktree list and highlight current directory
+    local current_path="$PWD"
+    git -C "$CODE_DIR/$project" worktree list | while IFS= read -r line; do
+        # Extract the path (first field)
+        local wt_path="${line%% *}"
+        if [[ "$current_path" == "$wt_path"* ]]; then
+            echo "* $line"
+        else
+            echo "  $line"
+        fi
+    done
+}
+
+# Remove a worktree (auto-detects project from current directory)
+function gwt-rm {
+    local project name
+
+    # No args: if inside a worktree, offer to remove it
+    if [[ $# -eq 0 ]]; then
+        project=$(_gwt_detect_project)
+        name=$(_gwt_detect_worktree)
+
+        if [[ -z "$name" ]]; then
+            echo "Usage: gwt-rm [project] [name]"
+            echo "       (run with no args inside a worktree to remove it)"
+            return 1
+        fi
+
+        # Confirm before removing current worktree
+        echo "Remove worktree '$name' from project '$project'? [y/N] "
+        read -r confirm
+        if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+            echo "Cancelled."
+            return 0
+        fi
+
+        # cd out of worktree before removing
+        cd "$CODE_DIR/$project"
+    elif [[ $# -eq 1 ]]; then
+        # One arg: try to auto-detect project
+        project=$(_gwt_detect_project)
+        name=$1
+    else
+        # Two args: explicit project and name
+        project=$1
+        name=$2
+    fi
+
+    if [[ -z "$project" || -z "$name" ]]; then
+        echo "Usage: gwt-rm [project] [name]"
+        echo "       (project auto-detected when inside a worktree directory)"
+        return 1
+    fi
+
+    git -C "$CODE_DIR/$project" worktree remove "$WORKTREES_DIR/$project/$name"
+
+    # Clean up empty project directory
+    rmdir "$WORKTREES_DIR/$project" 2>/dev/null
+}
+
+# Prune stale worktree references (auto-detects project from current directory)
+function gwt-prune {
+    local project=${1:-$(_gwt_detect_project)}
+
+    if [[ -z "$project" ]]; then
+        echo "Usage: gwt-prune [project]"
+        echo "       (project auto-detected when inside a worktree directory)"
+        return 1
+    fi
+
+    git -C "$CODE_DIR/$project" worktree prune
+}
+
+# Bash completion for gwt commands
+
+# Helper: get current word from COMP_LINE (handles slashes in branch names)
+function _gwt_get_cur {
+    local line="${COMP_LINE:0:COMP_POINT}"
+    # Get last word, not splitting on /
+    echo "${line##* }"
+}
+
+function _gwt_complete_projects {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    # List directories in CODE_DIR (excluding hidden dirs like .worktrees)
+    local projects=$(ls -1 --color=never "$CODE_DIR" 2>/dev/null | grep --color=never -v '^\.')
+    COMPREPLY=($(compgen -W "$projects" -- "$cur"))
+}
+
+function _gwt_complete_worktrees {
+    local project=$1
+    local cur=$(_gwt_get_cur)
+    # Use git worktree list to get actual worktree names (handles slashes in names)
+    local worktrees=$(git --no-pager -C "$CODE_DIR/$project" worktree list --porcelain 2>/dev/null | \
+        grep --color=never "^worktree " | \
+        sed "s|^worktree ||" | \
+        sed "s|^$WORKTREES_DIR/$project/||" | \
+        grep --color=never -v "^$CODE_DIR")
+    COMPREPLY=($(compgen -W "$worktrees" -- "$cur"))
+}
+
+function _gwt_complete_branches {
+    local project=$1
+    local cur=$(_gwt_get_cur)
+    if [[ -d "$CODE_DIR/$project/.git" || -d "$CODE_DIR/$project" ]]; then
+        local branches=$(git --no-pager -C "$CODE_DIR/$project" branch -a --no-color --format='%(refname:short)' 2>/dev/null | \
+            sed 's|origin/||' | sort -u)
+        COMPREPLY=($(compgen -W "$branches" -- "$cur"))
+    fi
+}
+
+function _gwt_completion {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local detected=$(_gwt_detect_project)
+
+    if [[ -n "$detected" ]]; then
+        # Inside project - first arg is worktree name
+        case $COMP_CWORD in
+            1) _gwt_complete_worktrees "$detected" ;;
+        esac
+    else
+        # Outside project - first arg is project, second is worktree
+        case $COMP_CWORD in
+            1) _gwt_complete_projects ;;
+            2) _gwt_complete_worktrees "$prev" ;;
+        esac
+    fi
+}
+
+function _gwt_mk_completion {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    # Handle --force flag
+    if [[ "$cur" == -* ]]; then
+        COMPREPLY=($(compgen -W "--force -f" -- "$cur"))
+        return
+    fi
+
+    # Determine position accounting for --force/-f
+    local pos=$COMP_CWORD
+    if [[ "${COMP_WORDS[1]}" == "--force" || "${COMP_WORDS[1]}" == "-f" ]]; then
+        ((pos--))
+    fi
+
+    # Check if inside a project directory
+    local detected=$(_gwt_detect_project)
+
+    if [[ -n "$detected" ]]; then
+        # Inside project - first arg is branch
+        case $pos in
+            1) _gwt_complete_branches "$detected" "$cur" ;;
+        esac
+    else
+        # Outside project - first arg is project, second is branch
+        case $pos in
+            1) _gwt_complete_projects ;;
+            2)
+                local project="${COMP_WORDS[COMP_CWORD-1]}"
+                if [[ "${COMP_WORDS[1]}" == "--force" || "${COMP_WORDS[1]}" == "-f" ]]; then
+                    project="${COMP_WORDS[2]}"
+                fi
+                _gwt_complete_branches "$project" "$cur"
+                ;;
+        esac
+    fi
+}
+
+function _gwt_rm_completion {
+    local cur=$(_gwt_get_cur)
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    case $COMP_CWORD in
+        1)
+            # Could be project or worktree name if inside project dir
+            local detected=$(_gwt_detect_project)
+            if [[ -n "$detected" ]]; then
+                # Offer both projects and worktrees of current project
+                _gwt_complete_projects
+                local worktrees=$(git --no-pager -C "$CODE_DIR/$detected" worktree list --porcelain 2>/dev/null | \
+                    grep --color=never "^worktree " | \
+                    sed "s|^worktree ||" | \
+                    sed "s|^$WORKTREES_DIR/$detected/||" | \
+                    grep --color=never -v "^$CODE_DIR")
+                COMPREPLY+=($(compgen -W "$worktrees" -- "$cur"))
+            else
+                _gwt_complete_projects
+            fi
+            ;;
+        2) _gwt_complete_worktrees "$prev" ;;
+    esac
+}
+
+function _gwt_ls_prune_completion {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    if [[ $COMP_CWORD -eq 1 ]]; then
+        _gwt_complete_projects
+    fi
+}
+
+function _gwt_cd_completion {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local detected=$(_gwt_detect_project)
+
+    if [[ -n "$detected" ]]; then
+        # Inside project - first arg is worktree
+        case $COMP_CWORD in
+            1) _gwt_complete_worktrees "$detected" ;;
+        esac
+    else
+        # Outside project - first arg is project, second is worktree
+        case $COMP_CWORD in
+            1) _gwt_complete_projects ;;
+            2) _gwt_complete_worktrees "$prev" ;;
+        esac
+    fi
+}
+
+# Register completions
+complete -F _gwt_completion gwt
+complete -F _gwt_cd_completion gwt-cd
+complete -F _gwt_mk_completion gwt-mk
+complete -F _gwt_ls_prune_completion gwt-ls
+complete -F _gwt_rm_completion gwt-rm
+complete -F _gwt_ls_prune_completion gwt-prune
+
+
 ##
 # Text Processing & File Utilities
 
