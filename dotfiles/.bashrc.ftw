@@ -190,6 +190,9 @@ PATH=$HOME/bin:$HOME/.local/bin:$PATH:/usr/local/sbin:/usr/local/bin
 export GOPATH="${GOPATH:-$HOME/go}"
 PATH="$PATH:$GOPATH/bin"
 
+# Bun: JavaScript runtime & toolkit
+PATH="$PATH:$HOME/.bun/bin"
+
 export PATH
 
 # Emacs is the best:
