@@ -191,7 +191,8 @@ export GOPATH="${GOPATH:-$HOME/go}"
 PATH="$PATH:$GOPATH/bin"
 
 # Bun: JavaScript runtime & toolkit
-PATH="$PATH:$HOME/.bun/bin"
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
 
 export PATH
 
