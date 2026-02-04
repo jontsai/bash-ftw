@@ -194,6 +194,16 @@ PATH="$PATH:$GOPATH/bin"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
+# PNPM
+
+if [[ $KERNEL == 'Darwin' ]]; then
+    export PNPM_HOME="$HOME/Library/pnpm"
+    case ":$PATH:" in
+        *":$PNPM_HOME:"*) ;;
+        *) export PATH="$PNPM_HOME:$PATH" ;;
+    esac
+fi
+
 export PATH
 
 # Emacs is the best:
@@ -956,6 +966,7 @@ alias install-codex="npm install -g @openai/codex"
 alias install-cursor="curl https://cursor.com/install -fsS | bash"
 alias install-nvm="curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash"
 alias install-pip="curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py"
+alias install-pnpm="curl -fsSL https://get.pnpm.io/install.sh | sh -"
 alias install-rust="curl https://sh.rustup.rs -sSf | sh"
 alias install-tpm="git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm"
 
