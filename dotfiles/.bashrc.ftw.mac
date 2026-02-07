@@ -22,6 +22,9 @@ alias llat='ls -lahtFG'
 alias topcpu='top -o CPU'
 alias topmem='top -o MEM'
 
+# Mac
+alias fixlogin='sudo killall loginwindow'
+
 # command-line utils
 if [[ -z `which 7z` ]];
 then
