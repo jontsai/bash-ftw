@@ -89,7 +89,10 @@ alias photobooth='open -a Photo\ Booth'
 alias facetime='open -a FaceTime'
 alias safari='open -a Safari'
 # Tailscale VPN - https://tailscale.com/kb/1080/cli?tab=macos
-alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+# Use app CLI if installed, otherwise fall back to homebrew tailscale in PATH
+if [ -d "/Applications/Tailscale.app" ]; then
+    alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+fi
 
 ##
 # util
