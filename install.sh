@@ -60,13 +60,22 @@ then
     cp -v dotfiles/.bashrc.ftw $HOME/
     cp -v dotfiles/.git-completion.bash $HOME/
     INCLUDE_BASHRC_SOURCE="[[ -s \"\$HOME/.bashrc.ftw\" ]] && source \$HOME/.bashrc.ftw"
-    ALREADY_EXISTS=`tail -n 1 $BASHRC_FILE`
-    if [ "$ALREADY_EXISTS" == "$INCLUDE_BASHRC_SOURCE" ]
-    then
-        echo "bash-ftw is already included in $BASHRC_FILE"
+    # Check if line exists anywhere in the file
+    if grep -qF "$INCLUDE_BASHRC_SOURCE" "$BASHRC_FILE"; then
+        # Line exists - check if it's at the end
+        LAST_LINE=$(tail -n 1 "$BASHRC_FILE")
+        if [ "$LAST_LINE" == "$INCLUDE_BASHRC_SOURCE" ]; then
+            echo "bash-ftw is already at the end of $BASHRC_FILE"
+        else
+            echo "Moving bash-ftw to end of $BASHRC_FILE"
+            # Remove existing line(s) and re-add at end
+            grep -vF "$INCLUDE_BASHRC_SOURCE" "$BASHRC_FILE" > "${BASHRC_FILE}.tmp"
+            mv "${BASHRC_FILE}.tmp" "$BASHRC_FILE"
+            echo "$INCLUDE_BASHRC_SOURCE" >> "$BASHRC_FILE"
+        fi
     else
         echo "Adding bash-ftw include to $BASHRC_FILE"
-        echo "$INCLUDE_BASHRC_SOURCE" >> $BASHRC_FILE
+        echo "$INCLUDE_BASHRC_SOURCE" >> "$BASHRC_FILE"
     fi
     if [ $KERNEL == 'Darwin' ]
     then
