@@ -226,6 +226,17 @@ function mount-ntfs-rw {
 
 
 #
+# Browser / CDP
+#
+
+function brave-cdp {
+    # Launch headed Brave with Chrome DevTools Protocol enabled for OpenClaw browser attach.
+    # Used for Fremont Bank workflows that require Jonathan to log in interactively.
+    killall "Brave Browser" 2>/dev/null || true
+    open -a "Brave Browser" --args --remote-debugging-port=9222 >/dev/null 2>&1 & disown
+}
+
+#
 # Networking
 #
 
