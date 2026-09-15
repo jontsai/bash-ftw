@@ -230,10 +230,56 @@ function mount-ntfs-rw {
 #
 
 function brave-cdp {
-    # Launch headed Brave with Chrome DevTools Protocol enabled for OpenClaw browser attach.
-    # Used for Fremont Bank workflows that require Jonathan to log in interactively.
-    killall "Brave Browser" 2>/dev/null || true
-    open -a "Brave Browser" --args --remote-debugging-port=9222 >/dev/null 2>&1 & disown
+    # Restart only this user's Brave listener. Set CDP_PORT in ~/.bashrc.$USER.
+    # Keep the existing browser profile/cookies; never use a blanket killall.
+    local port="${CDP_PORT:-9222}"
+    local uid pid owner executable pids attempt
+    if [[ ! "$port" =~ ^[0-9]{1,5}$ ]] || (( 10#$port < 1 || 10#$port > 65535 )); then
+        echo "brave-cdp: CDP_PORT must be an integer from 1 to 65535." >&2
+        return 1
+    fi
+    port=$((10#$port))
+    uid=$(id -u) || return 1
+    pids=$(lsof -nP -t -iTCP:"$port" -sTCP:LISTEN 2>/dev/null)
+
+    # Validate every listener before stopping anything. A port is not ownership.
+    for pid in $pids; do
+        owner=$(ps -p "$pid" -o uid= | tr -d '[:space:]')
+        executable=$(ps -p "$pid" -o comm=)
+        if [[ "$owner" != "$uid" || "${executable##*/}" != "Brave Browser" ]]; then
+            echo "brave-cdp: port $port is not exclusively owned by your Brave; refusing to stop it." >&2
+            return 1
+        fi
+    done
+    if [[ -z "$pids" ]] && pgrep -u "$uid" -x 'Brave Browser' >/dev/null; then
+        echo "brave-cdp: Brave is already open without a listener on port $port. Quit that instance first; no browsers were stopped." >&2
+        return 1
+    fi
+
+    for pid in $pids; do
+        kill -TERM "$pid" || return 1
+    done
+    for pid in $pids; do
+        for ((attempt=0; attempt<50; attempt++)); do
+            kill -0 "$pid" 2>/dev/null || break
+            sleep 0.1
+        done
+        if kill -0 "$pid" 2>/dev/null; then
+            echo "brave-cdp: Brave has not exited; not forcing termination or starting another instance." >&2
+            return 1
+        fi
+    done
+
+    open -a "Brave Browser" --args --remote-debugging-port="$port" || return 1
+    for ((attempt=0; attempt<20; attempt++)); do
+        if curl --noproxy '*' -fsS --max-time 1 "http://127.0.0.1:$port/json/version" 2>/dev/null | grep -q '"webSocketDebuggerUrl"'; then
+            echo "Brave CDP ready at http://127.0.0.1:$port"
+            return 0
+        fi
+        sleep 0.5
+    done
+    echo "brave-cdp: no CDP endpoint on port $port. Check the user's graphical login and Brave startup." >&2
+    return 1
 }
 
 #
