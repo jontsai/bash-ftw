@@ -230,20 +230,22 @@ function mount-ntfs-rw {
 #
 
 function brave-cdp {
-    # Restart only this user's Brave listener. Set CDP_PORT in ~/.bashrc.$USER.
-    # Keep the existing browser profile/cookies; never use a blanket killall.
+    # Restart THIS USER'S Brave with CDP enabled. Set CDP_PORT in ~/.bashrc.$USER.
+    # Scoped by uid, never a blanket killall: other login users' browsers are
+    # untouched, which is what matters on a multi-user box like yedidyah.
     local port="${CDP_PORT:-9222}"
-    local uid pid owner executable pids attempt
+    local uid pid owner executable listeners ours attempt
     if [[ ! "$port" =~ ^[0-9]{1,5}$ ]] || (( 10#$port < 1 || 10#$port > 65535 )); then
         echo "brave-cdp: CDP_PORT must be an integer from 1 to 65535." >&2
         return 1
     fi
     port=$((10#$port))
     uid=$(id -u) || return 1
-    pids=$(lsof -nP -t -iTCP:"$port" -sTCP:LISTEN 2>/dev/null)
 
-    # Validate every listener before stopping anything. A port is not ownership.
-    for pid in $pids; do
+    # A port is not ownership. Refuse outright if anything listening on it is not
+    # our own Brave, rather than killing a stranger's process.
+    listeners=$(lsof -nP -t -iTCP:"$port" -sTCP:LISTEN 2>/dev/null)
+    for pid in $listeners; do
         owner=$(ps -p "$pid" -o uid= | tr -d '[:space:]')
         executable=$(ps -p "$pid" -o comm=)
         if [[ "$owner" != "$uid" || "${executable##*/}" != "Brave Browser" ]]; then
@@ -251,24 +253,33 @@ function brave-cdp {
             return 1
         fi
     done
-    if [[ -z "$pids" ]] && pgrep -u "$uid" -x 'Brave Browser' >/dev/null; then
-        echo "brave-cdp: Brave is already open without a listener on port $port. Quit that instance first; no browsers were stopped." >&2
-        return 1
-    fi
 
-    for pid in $pids; do
-        kill -TERM "$pid" || return 1
-    done
-    for pid in $pids; do
+    # Everything this user is running, whether or not it holds the port. A Brave
+    # started without the flag is the common case and must be restarted, not
+    # complained about.
+    ours=$(pgrep -u "$uid" -x 'Brave Browser')
+    if [[ -n "$ours" ]]; then
+        # Ask nicely first so Brave writes its session out. SIGTERM does not
+        # trigger a save, and losing tabs to a debugging restart is unacceptable.
+        osascript -e 'quit app "Brave Browser"' >/dev/null 2>&1
         for ((attempt=0; attempt<50; attempt++)); do
-            kill -0 "$pid" 2>/dev/null || break
+            pgrep -u "$uid" -x 'Brave Browser' >/dev/null || break
             sleep 0.1
         done
-        if kill -0 "$pid" 2>/dev/null; then
+        # Headless/ssh sessions have no GUI to accept the quit; fall back to TERM,
+        # still only against our own pids.
+        for pid in $(pgrep -u "$uid" -x 'Brave Browser'); do
+            kill -TERM "$pid" 2>/dev/null
+        done
+        for ((attempt=0; attempt<50; attempt++)); do
+            pgrep -u "$uid" -x 'Brave Browser' >/dev/null || break
+            sleep 0.1
+        done
+        if pgrep -u "$uid" -x 'Brave Browser' >/dev/null; then
             echo "brave-cdp: Brave has not exited; not forcing termination or starting another instance." >&2
             return 1
         fi
-    done
+    fi
 
     open -a "Brave Browser" --args --remote-debugging-port="$port" || return 1
     for ((attempt=0; attempt<20; attempt++)); do
